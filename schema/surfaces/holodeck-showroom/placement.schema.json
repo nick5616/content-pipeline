@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HolodeckShowroomPlacement",
+  "description": "Layout stays in site code: only order (on the placement), viewport and light color here.",
+  "type": "object",
+  "properties": {
+    "viewport": { "description": "Viewport preset slug from taxonomy.viewports.", "$ref": "../../common.schema.json#/$defs/slug" },
+    "light": { "$ref": "../../common.schema.json#/$defs/hexColor" }
+  },
+  "additionalProperties": false
+}

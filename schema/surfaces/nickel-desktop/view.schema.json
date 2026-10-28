@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NickelDesktopView",
+  "type": "object",
+  "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/viewHeader" }],
+  "properties": {
+    "view": { "type": "string", "const": "nickel-desktop" },
+    "viewVersion": { "type": "integer", "const": 1 },
+    "pipelineVersion": { "type": "string" },
+    "taxonomy": { "$ref": "../../view-common.schema.json#/$defs/resolvedTaxonomy" },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "required": ["view", "viewVersion", "pipelineVersion", "taxonomy", "entries"],
+  "additionalProperties": false,
+  "$defs": {
+    "open": {
+      "description": "What clicking the icon does.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["route", "url"] },
+        "route": { "type": ["string", "null"] },
+        "url": { "anyOf": [{ "$ref": "../../common.schema.json#/$defs/httpUrl" }, { "type": "null" }] },
+        "newTab": { "type": "boolean" },
+        "window": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "width": { "type": ["integer", "null"] },
+                "height": { "type": ["integer", "null"] }
+              },
+              "required": ["width", "height"],
+              "additionalProperties": false
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["type", "route", "url", "newTab", "window"],
+      "additionalProperties": false,
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "route" } } }, "then": { "properties": { "route": { "type": "string" } } } },
+        { "if": { "properties": { "type": { "const": "url" } } }, "then": { "properties": { "url": { "$ref": "../../common.schema.json#/$defs/httpUrl" } } } }
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/entry" }],
+      "properties": {
+        "open": { "$ref": "#/$defs/open" },
+        "pinned": { "description": "Dock position, or null when not pinned.", "type": ["integer", "null"], "minimum": 0 },
+        "component": { "anyOf": [{ "$ref": "../../common.schema.json#/$defs/slug" }, { "type": "null" }] }
+      },
+      "required": ["open", "pinned", "component"],
+      "unevaluatedProperties": false
+    }
+  }
+}

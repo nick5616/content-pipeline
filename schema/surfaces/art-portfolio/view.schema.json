@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArtPortfolioView",
+  "description": "Entries carry their section; the site groups by it.",
+  "type": "object",
+  "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/viewHeader" }],
+  "properties": {
+    "view": { "type": "string", "const": "art-portfolio" },
+    "viewVersion": { "type": "integer", "const": 1 },
+    "pipelineVersion": { "type": "string" },
+    "taxonomy": { "$ref": "../../view-common.schema.json#/$defs/resolvedTaxonomy" },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "required": ["view", "viewVersion", "pipelineVersion", "taxonomy", "entries"],
+  "additionalProperties": false,
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/entry" }],
+      "properties": {
+        "section": { "type": "string", "enum": ["primary", "collections"] },
+        "image": { "anyOf": [{ "$ref": "../../view-common.schema.json#/$defs/resolvedAsset" }, { "type": "null" }] },
+        "cover": { "anyOf": [{ "$ref": "../../view-common.schema.json#/$defs/resolvedAsset" }, { "type": "null" }] },
+        "memberCount": { "description": "Collections only; null for pieces.", "type": ["integer", "null"], "minimum": 0 }
+      },
+      "required": ["section", "image", "cover", "memberCount"],
+      "unevaluatedProperties": false
+    }
+  }
+}

@@ -1,0 +1,1 @@
+ffmpeg version N-121000-g1a2b3c4d5e-static https://johnvansickle.com/ffmpeg/  Copyright (c) 2000-2025 the FFmpeg developers

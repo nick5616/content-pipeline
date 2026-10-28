@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HolodeckArtRoomPlacement",
+  "description": "Collections place with {}. Pieces may set titled to show their title on the wall.",
+  "type": "object",
+  "properties": {
+    "titled": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

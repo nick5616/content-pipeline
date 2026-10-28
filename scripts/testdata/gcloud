@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Stub gcloud for provision_test.go. Appends each call to $STUB_LOG and answers
+# reads from $STUB_STATE:
+#   none   nothing exists
+#   all    everything exists with the right settings
+#   drift  everything exists, but the public bucket lacks versioning and has
+#          stale CORS, and the archive bucket lacks the objectViewer binding
+set -euo pipefail
+printf '%s\n' "$*" >>"$STUB_LOG"
+args=" $* "
+
+notfound() { echo "ERROR: (gcloud) $1 not found: 404" >&2; exit 1; }
+
+case "$args" in
+  *" iam service-accounts describe "*)
+    [[ $STUB_STATE == none ]] && notfound "$4"
+    echo "{\"email\": \"$STUB_SA\"}" ;;
+  *" iam service-accounts get-iam-policy "*)
+    [[ $STUB_STATE == none ]] && notfound "$4"
+    echo "{\"bindings\": [{\"role\": \"roles/iam.serviceAccountTokenCreator\", \"members\": [\"$STUB_OPERATOR\"]}]}" ;;
+  *" storage buckets describe "*)
+    [[ $STUB_STATE == none ]] && notfound "$4"
+    b=${4#gs://}
+    pap=enforced versioning=true cors=null
+    if [[ $b == "$STUB_PUBLIC" ]]; then
+      pap=inherited
+      cors="[{\"maxAgeSeconds\": 3600, \"method\": [\"HEAD\", \"GET\"], \"origin\": [\"https://b.example\", \"https://a.example\"], \"responseHeader\": [\"Content-Type\"]}]"
+      if [[ $STUB_STATE == drift ]]; then
+        versioning=false
+        cors="[{\"maxAgeSeconds\": 3600, \"method\": [\"GET\"], \"origin\": [\"https://a.example\"], \"responseHeader\": [\"Content-Type\"]}]"
+      fi
+    fi
+    cat <<JSON
+{"name": "$b", "location": "US-CENTRAL1", "uniform_bucket_level_access": true,
+ "versioning_enabled": $versioning, "public_access_prevention": "$pap",
+ "soft_delete_policy": {"effectiveTime": "2026-10-27T00:00:00Z", "retentionDurationSeconds": "2592000"},
+ "cors_config": $cors}
+JSON
+    ;;
+  *" storage buckets get-iam-policy "*)
+    [[ $STUB_STATE == none ]] && notfound "$4"
+    b=${4#gs://}
+    sa="serviceAccount:$STUB_SA"
+    case $b in
+      "$STUB_PUBLIC") echo "{\"bindings\": [{\"role\": \"roles/storage.objectViewer\", \"members\": [\"allUsers\"]}, {\"role\": \"roles/storage.objectAdmin\", \"members\": [\"$sa\"]}]}" ;;
+      "$STUB_ARCHIVE")
+        if [[ $STUB_STATE == drift ]]; then
+          echo "{\"bindings\": [{\"role\": \"roles/storage.objectCreator\", \"members\": [\"$sa\"]}]}"
+        else
+          echo "{\"bindings\": [{\"role\": \"roles/storage.objectCreator\", \"members\": [\"$sa\"]}, {\"role\": \"roles/storage.objectViewer\", \"members\": [\"$sa\"]}]}"
+        fi ;;
+      *) echo "{\"bindings\": [{\"role\": \"roles/storage.objectAdmin\", \"members\": [\"$sa\"]}]}" ;;
+    esac ;;
+  *" create "* | *" update "* | *" add-iam-policy-binding "*) : ;;
+  *) echo "stub gcloud: unexpected call: $*" >&2; exit 3 ;;
+esac

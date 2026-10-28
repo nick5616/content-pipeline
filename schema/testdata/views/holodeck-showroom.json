@@ -1,0 +1,165 @@
+{
+  "entries": [
+    {
+      "category": {
+        "icon": "🤖",
+        "label": "AI Productivity",
+        "slug": "ai-productivity"
+      },
+      "date": {
+        "display": "Jun 2025",
+        "label": null,
+        "sortKey": 20250600,
+        "value": "2025-06"
+      },
+      "featured": false,
+      "id": "01JB7Z00000000000000000001",
+      "key": null,
+      "kind": "project",
+      "light": "#ff00ff",
+      "links": [
+        {
+          "label": null,
+          "rel": "live",
+          "url": "https://rpg-quests.netlify.app/"
+        },
+        {
+          "label": null,
+          "rel": "source",
+          "url": "https://github.com/nick5616/rpg-quests"
+        }
+      ],
+      "mediums": [],
+      "order": 12,
+      "preview": {
+        "embedUrl": "https://rpg-quests.netlify.app/",
+        "kind": "desktop",
+        "urls": [
+          "https://rpg-quests.netlify.app/"
+        ]
+      },
+      "slug": "rpg-quests",
+      "status": "operational",
+      "summary": "Write a journal entry and get it back as video game quests.",
+      "tags": [
+        "gamification",
+        "journaling"
+      ],
+      "tech": [
+        "typescript",
+        "react",
+        "llm-apis"
+      ],
+      "thumbnail": {
+        "alt": null,
+        "height": 1000,
+        "lqip": "data:image/webp;base64,UklGRhIAAABXRUJQVlA4IAYAAAAwAQCdASoBAAEAAkA4JaQAA3AA/v3AgAA=",
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/320.webp",
+            "width": 320
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/800.webp",
+            "width": 800
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/1600.webp",
+            "width": 1600
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/1600.webp",
+        "width": 1600
+      },
+      "title": "RPG Quests ⚔️",
+      "viewport": {
+        "height": 800,
+        "slug": "desktop",
+        "width": 1200
+      },
+      "why": "I wanted journaling to feel more like playing a game."
+    },
+    {
+      "category": null,
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z0000000000000000000B",
+      "key": null,
+      "kind": "experience",
+      "light": null,
+      "links": [
+        {
+          "label": null,
+          "rel": "live",
+          "url": "https://3d.saucedog.art/art"
+        }
+      ],
+      "mediums": [],
+      "order": 20,
+      "preview": {
+        "embedUrl": null,
+        "kind": "none",
+        "urls": []
+      },
+      "slug": "art-room",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "thumbnail": null,
+      "title": "Art Room",
+      "viewport": {
+        "height": 800,
+        "slug": "desktop",
+        "width": 1200
+      },
+      "why": ""
+    }
+  ],
+  "pipelineVersion": "0.1.0",
+  "profile": {
+    "headline": "Software engineer",
+    "links": {
+      "email": "hello@example.com",
+      "github": "https://github.com/nick5616"
+    },
+    "name": "Nicole Belovoskey",
+    "summary": "Fixture profile."
+  },
+  "taxonomy": {
+    "categories": [
+      {
+        "icon": "🤖",
+        "label": "AI Productivity",
+        "slug": "ai-productivity"
+      }
+    ],
+    "mediums": [],
+    "tags": [
+      {
+        "label": "Gamification",
+        "slug": "gamification"
+      },
+      {
+        "label": "Journaling",
+        "slug": "journaling"
+      }
+    ],
+    "tech": [
+      {
+        "label": "TypeScript",
+        "slug": "typescript"
+      },
+      {
+        "label": "React",
+        "slug": "react"
+      },
+      {
+        "label": "LLM APIs",
+        "slug": "llm-apis"
+      }
+    ]
+  },
+  "view": "holodeck-showroom",
+  "viewVersion": 1
+}

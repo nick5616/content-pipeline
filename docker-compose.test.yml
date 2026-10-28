@@ -1,0 +1,7 @@
+# Test-only services. `task test:integration` starts and stops these.
+services:
+  fake-gcs:
+    image: fsouza/fake-gcs-server:1.56.1
+    command: ["-scheme", "http", "-port", "4443", "-public-host", "localhost:4443", "-backend", "memory"]
+    ports:
+      - "127.0.0.1:4443:4443"

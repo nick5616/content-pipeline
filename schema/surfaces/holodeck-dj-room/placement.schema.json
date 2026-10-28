@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HolodeckDjRoomPlacement",
+  "description": "The Music collection and its tracks place with {}.",
+  "type": "object",
+  "additionalProperties": false
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExperienceFacts",
+  "description": "A place inside a site, like the Art Room.",
+  "type": "object",
+  "properties": {
+    "site": { "description": "The surface this place lives in.", "$ref": "../common.schema.json#/$defs/slug" }
+  },
+  "additionalProperties": false
+}

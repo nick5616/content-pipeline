@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VideoFacts",
+  "type": "object",
+  "properties": {
+    "duration": { "type": "number", "exclusiveMinimum": 0 },
+    "pixelWidth": { "type": "integer", "minimum": 1 },
+    "pixelHeight": { "type": "integer", "minimum": 1 },
+    "fps": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000 }
+  },
+  "additionalProperties": false
+}

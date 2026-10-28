@@ -1,0 +1,109 @@
+{
+  "entries": [
+    {
+      "category": null,
+      "cover": null,
+      "date": {
+        "display": "Oct 3, 2025",
+        "label": null,
+        "sortKey": 20251003,
+        "value": "2025-10-03"
+      },
+      "featured": false,
+      "id": "01JB7Z00000000000000000003",
+      "image": {
+        "alt": "Lanterns over a crowded street",
+        "height": 1200,
+        "lqip": "data:image/webp;base64,UklGRhIAAABXRUJQVlA4IAYAAAAwAQCdASoBAAEAAkA4JaQAA3AA/v3AgAA=",
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/320.webp",
+            "width": 320
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/800.webp",
+            "width": 800
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/1600.webp",
+            "width": 1600
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/1600.webp",
+        "width": 1600
+      },
+      "key": null,
+      "kind": "artwork",
+      "links": [],
+      "mediums": [
+        "digital"
+      ],
+      "memberCount": null,
+      "order": 1,
+      "section": "primary",
+      "slug": "night-market-study",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "title": "Night Market Study",
+      "why": ""
+    },
+    {
+      "category": null,
+      "cover": {
+        "alt": null,
+        "height": 1200,
+        "lqip": "data:image/webp;base64,UklGRhIAAABXRUJQVlA4IAYAAAAwAQCdASoBAAEAAkA4JaQAA3AA/v3AgAA=",
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/a854b5d5a63c74824fc8a80f707d9eef47009fbe5c3c305c3d37b09b7705f440/320.webp",
+            "width": 320
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/a854b5d5a63c74824fc8a80f707d9eef47009fbe5c3c305c3d37b09b7705f440/800.webp",
+            "width": 800
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/a854b5d5a63c74824fc8a80f707d9eef47009fbe5c3c305c3d37b09b7705f440/1600.webp",
+            "width": 1600
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/a854b5d5a63c74824fc8a80f707d9eef47009fbe5c3c305c3d37b09b7705f440/1600.webp",
+        "width": 1600
+      },
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z00000000000000000005",
+      "image": null,
+      "key": null,
+      "kind": "collection",
+      "links": [],
+      "mediums": [],
+      "memberCount": 1,
+      "order": 2,
+      "section": "collections",
+      "slug": "sketches",
+      "status": null,
+      "summary": "Quick studies.",
+      "tags": [],
+      "tech": [],
+      "title": "Sketches",
+      "why": ""
+    }
+  ],
+  "pipelineVersion": "0.1.0",
+  "taxonomy": {
+    "categories": [],
+    "mediums": [
+      {
+        "label": "Digital",
+        "slug": "digital"
+      }
+    ],
+    "tags": [],
+    "tech": []
+  },
+  "view": "art-portfolio",
+  "viewVersion": 1
+}

@@ -1,0 +1,2 @@
+qpdf version 11.9.0
+Run qpdf --copyright to see copyright and license information.

@@ -1,0 +1,403 @@
+{
+  "cases": [
+    {
+      "file": "valid/full.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "valid/empty.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": []
+    },
+    {
+      "file": "invalid/bad-blob-ref.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/bad-date-format.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/copy-field-not-allowed.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/placement-copy-field-not-allowed.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/facts-wrong-kind.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/facts-bad-camelot.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/members-on-project.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/bad-link-rel.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/bad-link-url.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/unknown-item-field.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/bad-ulid.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/bad-slug.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/missing-title.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/bad-visibility.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/owned-domain-with-scheme.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/schema-version.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/private-unknown-field.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "invalid/duplicate-id.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "duplicate-id",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/duplicate-slug.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "duplicate-slug",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/alias-is-other-slug.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "alias-collision",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/alias-is-other-alias.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "alias-collision",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/alias-is-own-slug.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "alias-collision",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/unknown-tech.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "unknown-taxonomy",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/unknown-category.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "unknown-taxonomy",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/unknown-viewport.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "unknown-taxonomy",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/duplicate-taxonomy.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "duplicate-taxonomy",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/undeclared-surface.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "unknown-surface",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/copy-undeclared-surface.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "unknown-surface",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/unregistered-surface.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "unregistered-surface",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/duplicate-surface.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "duplicate-surface",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/placement-config.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "placement-config",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/placement-config-missing-required.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "placement-config",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/placement-key-missing.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "placement-key",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/placement-key-duplicate.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "placement-key",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/member-missing.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "member-missing",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/member-self.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "member-self",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/member-cycle.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "member-cycle",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/preview-not-owned.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "not-owned-domain",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/embed-not-owned.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "not-owned-domain",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/owned-wildcard-shared-platform.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "shared-platform-wildcard",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/bad-date-calendar.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "bad-date",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "invalid/bad-experience-date.json",
+      "schema": "manifest",
+      "schemaValid": true,
+      "codes": [
+        "bad-date",
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "public/valid.json",
+      "schema": "public-manifest",
+      "schemaValid": true,
+      "codes": [
+        "link-not-owned"
+      ]
+    },
+    {
+      "file": "public/with-private.json",
+      "schema": "public-manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "public/with-draft.json",
+      "schema": "public-manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    }
+  ]
+}

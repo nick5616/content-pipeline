@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArtworkFacts",
+  "type": "object",
+  "properties": {
+    "pixelWidth": { "type": "integer", "minimum": 1 },
+    "pixelHeight": { "type": "integer", "minimum": 1 },
+    "physical": {
+      "description": "Size of the physical piece, if there is one.",
+      "type": "object",
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "depth": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "type": "string", "enum": ["cm", "in"] }
+      },
+      "required": ["width", "height", "unit"],
+      "additionalProperties": false
+    },
+    "palette": {
+      "description": "Dominant colors, written by palette@v1.",
+      "type": "array",
+      "items": { "$ref": "../common.schema.json#/$defs/hexColor" },
+      "maxItems": 16
+    }
+  },
+  "additionalProperties": false
+}

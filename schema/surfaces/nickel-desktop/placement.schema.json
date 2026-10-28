@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NickelDesktopPlacement",
+  "type": "object",
+  "properties": {
+    "route": { "description": "Internal app route. Without one, the icon opens the item's live link.", "type": "string", "pattern": "^/[A-Za-z0-9/_-]*$" },
+    "open": { "type": "string", "enum": ["new-tab", "in-window"] },
+    "window": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "integer", "minimum": 200, "maximum": 4000 },
+        "height": { "type": "integer", "minimum": 200, "maximum": 4000 }
+      },
+      "additionalProperties": false
+    },
+    "pinned": { "description": "Show in the dock.", "type": "boolean" },
+    "component": { "description": "Rich description key the desktop maps to a React component, e.g. batch-analyzer.", "$ref": "../../common.schema.json#/$defs/slug" }
+  },
+  "required": ["open"],
+  "additionalProperties": false
+}

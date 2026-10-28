@@ -1,0 +1,208 @@
+{
+  "entries": [
+    {
+      "category": null,
+      "date": {
+        "display": "Sometime in like Nov 2024",
+        "label": "Sometime in like Nov 2024",
+        "sortKey": 20241100,
+        "value": "2024-11"
+      },
+      "featured": false,
+      "id": "01JB7Z00000000000000000002",
+      "key": "desktop",
+      "kind": "project",
+      "links": [
+        {
+          "label": null,
+          "rel": "live",
+          "url": "https://tierlistify.netlify.app/"
+        }
+      ],
+      "mediums": [],
+      "order": 10,
+      "preview": {
+        "kind": "desktop",
+        "urls": [
+          "https://tierlistify.netlify.app/"
+        ]
+      },
+      "richDescription": null,
+      "slug": "tierlistify",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "thumbnail": null,
+      "title": "Tierlistify",
+      "why": ""
+    },
+    {
+      "category": null,
+      "date": {
+        "display": "Sometime in like Nov 2024",
+        "label": "Sometime in like Nov 2024",
+        "sortKey": 20241100,
+        "value": "2024-11"
+      },
+      "featured": false,
+      "id": "01JB7Z00000000000000000002",
+      "key": "phone",
+      "kind": "project",
+      "links": [
+        {
+          "label": null,
+          "rel": "live",
+          "url": "https://tierlistify.netlify.app/"
+        }
+      ],
+      "mediums": [],
+      "order": 11,
+      "preview": {
+        "kind": "phones",
+        "urls": [
+          "https://tierlistify.netlify.app/"
+        ]
+      },
+      "richDescription": null,
+      "slug": "tierlistify",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "thumbnail": null,
+      "title": "Tierlistify (mobile)",
+      "why": ""
+    },
+    {
+      "category": {
+        "icon": "🤖",
+        "label": "AI Productivity",
+        "slug": "ai-productivity"
+      },
+      "date": {
+        "display": "Jun 2025",
+        "label": null,
+        "sortKey": 20250600,
+        "value": "2025-06"
+      },
+      "featured": true,
+      "id": "01JB7Z00000000000000000001",
+      "key": null,
+      "kind": "project",
+      "links": [
+        {
+          "label": null,
+          "rel": "live",
+          "url": "https://rpg-quests.netlify.app/"
+        },
+        {
+          "label": null,
+          "rel": "source",
+          "url": "https://github.com/nick5616/rpg-quests"
+        }
+      ],
+      "mediums": [],
+      "order": 40,
+      "preview": {
+        "kind": "phones",
+        "urls": [
+          "https://rpg-quests.netlify.app/"
+        ]
+      },
+      "richDescription": null,
+      "slug": "rpg-quests",
+      "status": "operational",
+      "summary": "Write a journal entry and get it back as video game quests.",
+      "tags": [
+        "gamification",
+        "journaling"
+      ],
+      "tech": [
+        "typescript",
+        "react",
+        "llm-apis"
+      ],
+      "thumbnail": {
+        "alt": null,
+        "height": 1000,
+        "lqip": "data:image/webp;base64,UklGRhIAAABXRUJQVlA4IAYAAAAwAQCdASoBAAEAAkA4JaQAA3AA/v3AgAA=",
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/320.webp",
+            "width": 320
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/800.webp",
+            "width": 800
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/1600.webp",
+            "width": 1600
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6/1600.webp",
+        "width": 1600
+      },
+      "title": "RPG Quests",
+      "why": "I wanted journaling to feel more like playing a game."
+    }
+  ],
+  "filters": {
+    "tags": [
+      "gamification",
+      "journaling"
+    ],
+    "tech": [
+      "llm-apis",
+      "react",
+      "typescript"
+    ]
+  },
+  "pipelineVersion": "0.1.0",
+  "profile": {
+    "headline": "Software engineer",
+    "links": {
+      "email": "hello@example.com",
+      "github": "https://github.com/nick5616"
+    },
+    "name": "Nicole Belovoskey",
+    "summary": "Fixture profile."
+  },
+  "taxonomy": {
+    "categories": [
+      {
+        "icon": "🤖",
+        "label": "AI Productivity",
+        "slug": "ai-productivity"
+      }
+    ],
+    "mediums": [],
+    "tags": [
+      {
+        "label": "Gamification",
+        "slug": "gamification"
+      },
+      {
+        "label": "Journaling",
+        "slug": "journaling"
+      }
+    ],
+    "tech": [
+      {
+        "label": "TypeScript",
+        "slug": "typescript"
+      },
+      {
+        "label": "React",
+        "slug": "react"
+      },
+      {
+        "label": "LLM APIs",
+        "slug": "llm-apis"
+      }
+    ]
+  },
+  "view": "software-portfolio",
+  "viewVersion": 1
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PhotoFacts",
+  "description": "No camera, lens or location fields: the sanitizer removes them, and facts never reintroduce them.",
+  "type": "object",
+  "properties": {
+    "pixelWidth": { "type": "integer", "minimum": 1 },
+    "pixelHeight": { "type": "integer", "minimum": 1 },
+    "palette": {
+      "type": "array",
+      "items": { "$ref": "../common.schema.json#/$defs/hexColor" },
+      "maxItems": 16
+    }
+  },
+  "additionalProperties": false
+}

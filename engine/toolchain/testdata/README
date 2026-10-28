@@ -1,0 +1,2 @@
+Brew and static-build samples (*-brew.txt, ffmpeg-git-static.txt) are hand-written in
+the exact format those builds print. *-ubuntu.txt are recorded from WSL Ubuntu 24.04.

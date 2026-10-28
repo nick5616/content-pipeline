@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canon common definitions",
+  "description": "Shared by the manifest, the public projection, facts, placements and views.",
+  "$defs": {
+    "ulid": {
+      "description": "Item id. Never changes.",
+      "type": "string",
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+    },
+    "slug": {
+      "description": "Lowercase words joined by single hyphens.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "blobRef": {
+      "description": "SHA-256 of a sanitized blob.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "isoPartialDate": {
+      "description": "ISO 8601 date with optional month and day: 2025, 2025-10 or 2025-10-03.",
+      "type": "string",
+      "pattern": "^[0-9]{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12][0-9]|3[01]))?)?$"
+    },
+    "httpUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https?://[^\\s/?#]+([/?#][^\\s]*)?$",
+      "maxLength": 2048
+    },
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#[0-9a-f]{6}$"
+    },
+    "date": {
+      "description": "value sorts; label, if set, is shown instead (\"Sometime in like Oct 2025\").",
+      "type": "object",
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/isoPartialDate"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "linkRel": {
+      "type": "string",
+      "enum": [
+        "live",
+        "source",
+        "backend-source",
+        "docs",
+        "video",
+        "listen"
+      ]
+    },
+    "link": {
+      "type": "object",
+      "properties": {
+        "rel": {
+          "$ref": "#/$defs/linkRel"
+        },
+        "url": {
+          "$ref": "#/$defs/httpUrl"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "rel",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "assetRole": {
+      "type": "string",
+      "enum": [
+        "thumbnail",
+        "screenshot",
+        "demo",
+        "original",
+        "cover",
+        "audio",
+        "video",
+        "document"
+      ]
+    },
+    "assetRef": {
+      "description": "A media file by role and, optionally, viewport. Sites ask for (role, viewport) and fall back to the thumbnail.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/assetRole"
+        },
+        "viewport": {
+          "$ref": "#/$defs/slug"
+        },
+        "blob": {
+          "$ref": "#/$defs/blobRef"
+        },
+        "alt": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "role",
+        "blob"
+      ],
+      "additionalProperties": false
+    },
+    "taxonomyRef": {
+      "$ref": "#/$defs/slug"
+    },
+    "taxonomyTerm": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "$ref": "#/$defs/slug"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "slug",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "viewport": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "$ref": "#/$defs/slug"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        }
+      },
+      "required": [
+        "slug",
+        "label",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "copyFields": {
+      "description": "Per-surface wording (D8). Only these fields can be overridden.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "why": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "date": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "richDescription": {
+          "$ref": "#/$defs/richDescription"
+        }
+      },
+      "additionalProperties": false
+    },
+    "richDescription": {
+      "description": "A markdown blob, or a key a site maps to its own component.",
+      "type": "object",
+      "properties": {
+        "markdownBlob": {
+          "$ref": "#/$defs/blobRef"
+        },
+        "component": {
+          "$ref": "#/$defs/slug"
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "credit": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "experience": {
+      "type": "object",
+      "properties": {
+        "organization": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "start": {
+          "$ref": "#/$defs/isoPartialDate"
+        },
+        "end": {
+          "$ref": "#/$defs/isoPartialDate"
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "url": {
+          "$ref": "#/$defs/httpUrl"
+        }
+      },
+      "required": [
+        "organization",
+        "role",
+        "start"
+      ],
+      "additionalProperties": false
+    },
+    "education": {
+      "type": "object",
+      "properties": {
+        "institution": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "degree": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "field": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "start": {
+          "$ref": "#/$defs/isoPartialDate"
+        },
+        "end": {
+          "$ref": "#/$defs/isoPartialDate"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "institution"
+      ],
+      "additionalProperties": false
+    },
+    "profile": {
+      "description": "Site-wide identity. Not an item.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "headline": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "links": {
+          "type": "object",
+          "properties": {
+            "github": {
+              "$ref": "#/$defs/httpUrl"
+            },
+            "linkedin": {
+              "$ref": "#/$defs/httpUrl"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "website": {
+              "$ref": "#/$defs/httpUrl"
+            }
+          },
+          "additionalProperties": false
+        },
+        "experience": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/experience"
+          }
+        },
+        "education": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/education"
+          }
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "project",
+        "artwork",
+        "photo",
+        "track",
+        "video",
+        "writing",
+        "collection",
+        "experience"
+      ]
+    }
+  }
+}

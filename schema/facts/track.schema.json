@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TrackFacts",
+  "description": "D15. Seconds throughout. bpm, firstBeat, key and camelot come from djgrid@v1.",
+  "type": "object",
+  "properties": {
+    "duration": { "type": "number", "exclusiveMinimum": 0 },
+    "bpm": { "type": "number", "exclusiveMinimum": 0, "maximum": 400 },
+    "firstBeat": { "type": "number", "minimum": 0 },
+    "start": { "description": "Where playback starts in the DJ room.", "type": "number", "minimum": 0 },
+    "key": { "description": "Musical key as djgrid@v1 writes it (format matches build-dj-crate.mjs).", "type": "string", "minLength": 1, "maxLength": 16 },
+    "camelot": { "type": "string", "pattern": "^(1[0-2]|[1-9])[AB]$" },
+    "sampleRate": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false
+}

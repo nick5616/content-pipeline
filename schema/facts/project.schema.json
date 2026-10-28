@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProjectFacts",
+  "type": "object",
+  "properties": {
+    "embeddable": {
+      "description": "Whether the live link can run in an iframe. Recorded once; iframe surfaces fall back to a screenshot when false.",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HolodeckArtRoomView",
+  "description": "Entries are the gallery-hall collections, each with its pieces in order.",
+  "type": "object",
+  "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/viewHeader" }],
+  "properties": {
+    "view": { "type": "string", "const": "holodeck-art-room" },
+    "viewVersion": { "type": "integer", "const": 1 },
+    "pipelineVersion": { "type": "string" },
+    "taxonomy": { "$ref": "../../view-common.schema.json#/$defs/resolvedTaxonomy" },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "required": ["view", "viewVersion", "pipelineVersion", "taxonomy", "entries"],
+  "additionalProperties": false,
+  "$defs": {
+    "piece": {
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "../../common.schema.json#/$defs/ulid" },
+        "slug": { "$ref": "../../common.schema.json#/$defs/slug" },
+        "title": { "description": "Null unless the placement sets titled.", "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] },
+        "date": { "anyOf": [{ "$ref": "../../view-common.schema.json#/$defs/resolvedDate" }, { "type": "null" }] },
+        "image": { "$ref": "../../view-common.schema.json#/$defs/resolvedAsset" }
+      },
+      "required": ["id", "slug", "title", "description", "date", "image"],
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/entry" }],
+      "properties": {
+        "kind": { "const": "collection" },
+        "pieces": { "type": "array", "items": { "$ref": "#/$defs/piece" } }
+      },
+      "required": ["pieces"],
+      "unevaluatedProperties": false
+    }
+  }
+}

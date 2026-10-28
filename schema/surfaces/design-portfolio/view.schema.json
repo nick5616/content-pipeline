@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DesignPortfolioView",
+  "type": "object",
+  "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/viewHeader" }],
+  "properties": {
+    "view": { "type": "string", "const": "design-portfolio" },
+    "viewVersion": { "type": "integer", "const": 1 },
+    "pipelineVersion": { "type": "string" },
+    "taxonomy": { "$ref": "../../view-common.schema.json#/$defs/resolvedTaxonomy" },
+
+    "filters": {
+      "description": "Most used first.",
+      "type": "object",
+      "properties": {
+        "tech": { "type": "array", "items": { "$ref": "../../common.schema.json#/$defs/slug" } },
+        "tags": { "type": "array", "items": { "$ref": "../../common.schema.json#/$defs/slug" } }
+      },
+      "required": ["tech", "tags"],
+      "additionalProperties": false
+    },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "required": ["view", "viewVersion", "pipelineVersion", "taxonomy", "entries", "filters"],
+  "additionalProperties": false,
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/entry" }],
+      "properties": {
+        "preview": {
+          "type": "object",
+          "description": "auto is already resolved: embeddable items with an owned live link frame it, others fall back to a screenshot.",
+          "properties": {
+            "kind": { "type": "string", "enum": ["none", "desktop", "phones", "laser-room", "screenshot"] },
+            "urls": { "type": "array", "items": { "$ref": "../../common.schema.json#/$defs/httpUrl" } }
+          },
+          "required": ["kind", "urls"],
+          "additionalProperties": false
+        },
+        "thumbnail": { "anyOf": [{ "$ref": "../../view-common.schema.json#/$defs/resolvedAsset" }, { "type": "null" }] }
+      },
+      "required": ["preview", "thumbnail"],
+      "unevaluatedProperties": false
+    }
+  }
+}

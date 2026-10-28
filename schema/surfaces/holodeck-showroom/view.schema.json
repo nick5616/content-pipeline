@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HolodeckShowroomView",
+  "type": "object",
+  "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/viewHeader" }],
+  "properties": {
+    "view": { "type": "string", "const": "holodeck-showroom" },
+    "viewVersion": { "type": "integer", "const": 1 },
+    "pipelineVersion": { "type": "string" },
+    "taxonomy": { "$ref": "../../view-common.schema.json#/$defs/resolvedTaxonomy" },
+    "profile": { "$ref": "../../common.schema.json#/$defs/profile" },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "required": ["view", "viewVersion", "pipelineVersion", "taxonomy", "entries", "profile"],
+  "additionalProperties": false,
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/entry" }],
+      "properties": {
+        "thumbnail": { "anyOf": [{ "$ref": "../../view-common.schema.json#/$defs/resolvedAsset" }, { "type": "null" }] },
+        "preview": {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "enum": ["none", "desktop", "phones", "laser-room", "screenshot"] },
+            "urls": { "type": "array", "items": { "$ref": "../../common.schema.json#/$defs/httpUrl" } },
+            "embedUrl": { "description": "Owned-domain page to frame, or null.", "anyOf": [{ "$ref": "../../common.schema.json#/$defs/httpUrl" }, { "type": "null" }] }
+          },
+          "required": ["kind", "urls", "embedUrl"],
+          "additionalProperties": false
+        },
+        "viewport": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "slug": { "$ref": "../../common.schema.json#/$defs/slug" },
+                "width": { "type": "integer", "minimum": 1 },
+                "height": { "type": "integer", "minimum": 1 }
+              },
+              "required": ["slug", "width", "height"],
+              "additionalProperties": false
+            },
+            { "type": "null" }
+          ]
+        },
+        "light": { "anyOf": [{ "$ref": "../../common.schema.json#/$defs/hexColor" }, { "type": "null" }] }
+      },
+      "required": ["thumbnail", "preview", "viewport", "light"],
+      "unevaluatedProperties": false
+    }
+  }
+}

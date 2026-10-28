@@ -1,0 +1,102 @@
+version: "3"
+
+vars:
+  FAKE_GCS_PORT: 4443
+
+tasks:
+  build:
+    desc: Build the UI, then canon (with the UI embedded) into bin/canon
+    deps: [ui:build]
+    cmds:
+      - task: build:go
+
+  build:go:
+    desc: Build canon without rebuilding the UI
+    cmds:
+      - go build -o bin/canon ./cmd/canon
+
+  test:
+    desc: Unit tests (Go, UI and client)
+    cmds:
+      - go test ./...
+      - task: ui:test
+      - task: client:test
+
+  test:integration:
+    desc: Integration tests against fake-gcs-server
+    cmds:
+      - docker compose -f docker-compose.test.yml up -d
+      - defer: docker compose -f docker-compose.test.yml down
+      - STORAGE_EMULATOR_HOST=localhost:{{.FAKE_GCS_PORT}} go test -tags integration -count=1 ./...
+
+  lint:
+    desc: gofmt, go vet and the UI typecheck
+    cmds:
+      - test -z "$(gofmt -l .)" || (gofmt -l . && echo "run gofmt -w ." && exit 1)
+      - go vet ./...
+      - go vet -tags integration ./...
+      - task: ui:typecheck
+      - task: client:typecheck
+
+  gen:
+    desc: Regenerate committed code and fixtures (CI fails if this leaves a diff)
+    deps: [ui:install, client:install]
+    cmds:
+      - go generate ./...
+
+  ui:install:
+    dir: ui
+    sources: [package.json, package-lock.json]
+    generates: [node_modules/.package-lock.json]
+    cmds:
+      - npm ci
+
+  ui:dev:
+    desc: Vite dev server on :5173, proxying /api to canon serve on :4747
+    dir: ui
+    deps: [ui:install]
+    cmds:
+      - npm run dev
+
+  ui:build:
+    desc: Build the UI into ui/dist for embedding
+    dir: ui
+    deps: [ui:install]
+    cmds:
+      - npm run build
+
+  ui:test:
+    dir: ui
+    deps: [ui:install]
+    cmds:
+      - npm test
+
+  ui:typecheck:
+    dir: ui
+    deps: [ui:install]
+    cmds:
+      - npm run typecheck
+
+  client:install:
+    dir: client
+    sources: [package.json, package-lock.json]
+    generates: [node_modules/.package-lock.json]
+    cmds:
+      - npm ci
+
+  client:test:
+    dir: client
+    deps: [client:install]
+    cmds:
+      - npm test
+
+  client:typecheck:
+    dir: client
+    deps: [client:install]
+    cmds:
+      - npm run typecheck
+
+  doctor:
+    desc: Check this machine
+    cmds:
+      - go run ./cmd/canon doctor

@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Manifest",
+  "description": "The private manifest: the single source of truth. Schema rules live here; cross-item rules (uniqueness, taxonomy refs, placement configs, owned domains, cycles) are checked by engine/manifest.Validate.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "profile": {
+      "$ref": "common.schema.json#/$defs/profile"
+    },
+    "ownedDomains": {
+      "description": "Hosts Nicole controls. Exact hosts for shared platforms; *.domain only for registered domains (D10).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(\\*\\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
+      },
+      "uniqueItems": true
+    },
+    "taxonomy": {
+      "$ref": "#/$defs/taxonomy"
+    },
+    "surfaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/surface"
+      }
+    },
+    "items": {
+      "description": "Sorted by id when written.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "profile",
+    "ownedDomains",
+    "taxonomy",
+    "surfaces",
+    "items"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "taxonomy": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        },
+        "tech": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        },
+        "mediums": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        },
+        "viewports": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/viewport"
+          }
+        }
+      },
+      "required": [
+        "categories",
+        "tech",
+        "mediums",
+        "tags",
+        "viewports"
+      ],
+      "additionalProperties": false
+    },
+    "surface": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "baseUrl": {
+          "$ref": "common.schema.json#/$defs/httpUrl"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "placement": {
+      "description": "Presence on a surface plus that surface's settings. Presence is the only on/off switch; hidden parks it.",
+      "type": "object",
+      "properties": {
+        "surface": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "key": {
+          "description": "Required when the item has more than one placement on the same surface.",
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": -1000000,
+          "maximum": 1000000
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "copy": {
+          "$ref": "common.schema.json#/$defs/copyFields"
+        },
+        "config": {
+          "description": "Checked against the surface's placement schema (schema/surfaces/<surface>/placement.schema.json).",
+          "type": "object"
+        }
+      },
+      "required": [
+        "surface",
+        "config"
+      ],
+      "additionalProperties": false
+    },
+    "private": {
+      "description": "Private manifest only. Never projected.",
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "item": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/ulid"
+        },
+        "slug": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "uniqueItems": true
+        },
+        "kind": {
+          "$ref": "common.schema.json#/$defs/kind"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "public"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "why": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "date": {
+          "$ref": "common.schema.json#/$defs/date"
+        },
+        "status": {
+          "description": "Free slug until the content.ts import shows the full set of values (e.g. operational).",
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "category": {
+          "$ref": "common.schema.json#/$defs/taxonomyRef"
+        },
+        "tech": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyRef"
+          },
+          "uniqueItems": true
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyRef"
+          },
+          "uniqueItems": true
+        },
+        "mediums": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyRef"
+          },
+          "uniqueItems": true
+        },
+        "credits": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/credit"
+          }
+        },
+        "facts": {
+          "description": "Typed by kind: schema/facts/<kind>.schema.json.",
+          "type": "object"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/link"
+          }
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/assetRef"
+          }
+        },
+        "copy": {
+          "description": "Per-surface wording, keyed by surface id. Placement copy wins over this, and this wins over the item.",
+          "type": "object",
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "additionalProperties": {
+            "$ref": "common.schema.json#/$defs/copyFields"
+          }
+        },
+        "placements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/placement"
+          }
+        },
+        "members": {
+          "description": "Collections only: ordered item ids.",
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/ulid"
+          },
+          "uniqueItems": true
+        },
+        "richDescription": {
+          "$ref": "common.schema.json#/$defs/richDescription"
+        },
+        "private": {
+          "$ref": "#/$defs/private"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "kind",
+        "visibility",
+        "title"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "project"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/project.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "artwork"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/artwork.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "photo"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/photo.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "track"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/track.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "video"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/video.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "writing"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/writing.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "collection"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/collection.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "experience"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "facts": {
+                "$ref": "facts/experience.schema.json"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "collection"
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "members"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

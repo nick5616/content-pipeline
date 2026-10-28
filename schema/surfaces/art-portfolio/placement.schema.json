@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArtPortfolioPlacement",
+  "type": "object",
+  "properties": {
+    "section": { "type": "string", "enum": ["primary", "collections"] }
+  },
+  "required": ["section"],
+  "additionalProperties": false
+}

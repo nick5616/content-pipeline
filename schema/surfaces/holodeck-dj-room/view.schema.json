@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HolodeckDjRoomView",
+  "description": "Same information as crate.json today (D15). Entries hold the Music collection; tracks are flattened in order.",
+  "type": "object",
+  "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/viewHeader" }],
+  "properties": {
+    "view": { "type": "string", "const": "holodeck-dj-room" },
+    "viewVersion": { "type": "integer", "const": 1 },
+    "pipelineVersion": { "type": "string" },
+    "taxonomy": { "$ref": "../../view-common.schema.json#/$defs/resolvedTaxonomy" },
+    "artist": { "description": "Default artist for the crate.", "type": "string" },
+    "tracks": { "type": "array", "items": { "$ref": "#/$defs/track" } },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "required": ["view", "viewVersion", "pipelineVersion", "taxonomy", "entries", "artist", "tracks"],
+  "additionalProperties": false,
+  "$defs": {
+    "track": {
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "../../common.schema.json#/$defs/ulid" },
+        "slug": { "$ref": "../../common.schema.json#/$defs/slug" },
+        "title": { "type": "string" },
+        "artist": { "type": "string" },
+        "audio": { "description": "192 kbps MP3 from dj-mp3@v1.", "$ref": "../../common.schema.json#/$defs/httpUrl" },
+        "analysis": { "description": "Beat grid and 3-band waveform JSON from djgrid@v1.", "$ref": "../../common.schema.json#/$defs/httpUrl" },
+        "duration": { "type": "number", "exclusiveMinimum": 0 },
+        "bpm": { "type": "number", "exclusiveMinimum": 0 },
+        "firstBeat": { "type": "number", "minimum": 0 },
+        "start": { "type": "number", "minimum": 0 },
+        "key": { "type": "string" },
+        "camelot": { "type": "string", "pattern": "^(1[0-2]|[1-9])[AB]$" }
+      },
+      "required": ["id", "slug", "title", "artist", "audio", "analysis", "duration", "bpm", "firstBeat", "start", "key", "camelot"],
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "allOf": [{ "$ref": "../../view-common.schema.json#/$defs/entry" }],
+      "unevaluatedProperties": false
+    }
+  }
+}

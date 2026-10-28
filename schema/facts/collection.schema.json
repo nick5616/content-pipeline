@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CollectionFacts",
+  "description": "Collections have no facts yet. Members live in the item's members list; the cover is the item's cover or thumbnail asset.",
+  "type": "object",
+  "additionalProperties": false
+}

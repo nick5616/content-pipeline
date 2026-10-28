@@ -1,0 +1,35 @@
+# Canon config. Copy to ~/.config/canon/config.yaml (or $XDG_CONFIG_HOME/canon/)
+# and fill in. The real file names buckets, so it stays out of git.
+#
+# Leave the bucket names empty until the buckets exist; `canon doctor` skips the
+# bucket checks while they are unset. scripts/provision-buckets.sh reads this file.
+
+project: my-gcp-project
+region: us-central1
+
+# Manifest, sanitized blobs, history. Public access prevention enforced.
+privateBucket: ""
+# Published copies and views. World-readable, with the CORS policy below.
+publicBucket: ""
+# Untouched originals keyed by SHA-256 (D14). Never read by publish or views.
+archiveBucket: ""
+
+# Optional. ADC impersonates this account for GCS writes.
+impersonateServiceAccount: canon-apply@my-gcp-project.iam.gserviceaccount.com
+# Who provisioning grants roles/iam.serviceAccountTokenCreator on that account.
+operator: user:you@example.com
+
+# Origins allowed to GET/HEAD from the public bucket (D16).
+publicCorsOrigins:
+  - https://nicolebelovoskey.com
+  - https://nickbelovoskey.com
+  - https://3d.saucedog.art
+  - https://www.3d.saucedog.art
+  - http://localhost:5173
+
+# Defaults: $XDG_CACHE_HOME/canon and $XDG_STATE_HOME/canon. Never the repo.
+# cacheDir: ~/.cache/canon
+# stateDir: ~/.local/state/canon
+
+serve:
+  port: 4747

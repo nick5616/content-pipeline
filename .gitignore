@@ -1,0 +1,16 @@
+# Build output
+/bin/
+.task/
+ui/node_modules/
+client/node_modules/
+ui/dist/*
+!ui/dist/.gitkeep
+
+# Local state that must never be committed
+config.yaml
+*.sqlite
+*.sqlite-*
+plan*.json
+.env*
+cache/
+testdata/_out/

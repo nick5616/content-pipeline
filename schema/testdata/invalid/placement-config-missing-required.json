@@ -1,0 +1,542 @@
+{
+  "items": [
+    {
+      "aliases": [
+        "videogamequest"
+      ],
+      "assets": [
+        {
+          "blob": "sha256:9aa85d33d28e9f59eefcd31220cfc8a47e2cd9d0839611cb051b75bc62ceb9e6",
+          "role": "thumbnail"
+        },
+        {
+          "blob": "sha256:3a2f513df0492c15fe99a7e36af788ff750aab883cc05f171cbbf2b6eb0ffd0e",
+          "role": "screenshot",
+          "viewport": "desktop"
+        },
+        {
+          "alt": "Quest list on a phone",
+          "blob": "sha256:20b59ba30b4fcb71c160d79dbc13a119f08d72fa408bbc1dc6dac711914965b5",
+          "role": "screenshot",
+          "viewport": "phone"
+        }
+      ],
+      "category": "ai-productivity",
+      "copy": {
+        "holodeck-showroom": {
+          "title": "RPG Quests ⚔️"
+        }
+      },
+      "date": {
+        "value": "2025-06"
+      },
+      "facts": {
+        "embeddable": true
+      },
+      "id": "01JB7Z00000000000000000001",
+      "kind": "project",
+      "links": [
+        {
+          "rel": "live",
+          "url": "https://rpg-quests.netlify.app/"
+        },
+        {
+          "rel": "source",
+          "url": "https://github.com/nick5616/rpg-quests"
+        }
+      ],
+      "placements": [
+        {
+          "config": {
+            "open": "new-tab"
+          },
+          "surface": "nickel-desktop"
+        },
+        {
+          "config": {
+            "preview": {
+              "kind": "phones",
+              "urls": [
+                "https://rpg-quests.netlify.app/"
+              ]
+            }
+          },
+          "featured": true,
+          "order": 40,
+          "surface": "software-portfolio"
+        },
+        {
+          "config": {
+            "light": "#ff00ff",
+            "viewport": "desktop"
+          },
+          "order": 12,
+          "surface": "holodeck-showroom"
+        }
+      ],
+      "private": {
+        "notes": "Old previews pointed at videogamequest.me, which lapsed. Repointed."
+      },
+      "slug": "rpg-quests",
+      "status": "operational",
+      "summary": "Write a journal entry and get it back as video game quests.",
+      "tags": [
+        "gamification",
+        "journaling"
+      ],
+      "tech": [
+        "typescript",
+        "react",
+        "llm-apis"
+      ],
+      "title": "RPG Quests",
+      "visibility": "public",
+      "why": "I wanted journaling to feel more like playing a game."
+    },
+    {
+      "date": {
+        "label": "Sometime in like Nov 2024",
+        "value": "2024-11"
+      },
+      "facts": {
+        "embeddable": true
+      },
+      "id": "01JB7Z00000000000000000002",
+      "kind": "project",
+      "links": [
+        {
+          "rel": "live",
+          "url": "https://tierlistify.netlify.app/"
+        }
+      ],
+      "placements": [
+        {
+          "config": {
+            "preview": {
+              "kind": "desktop"
+            }
+          },
+          "key": "desktop",
+          "order": 10,
+          "surface": "software-portfolio"
+        },
+        {
+          "config": {
+            "preview": {
+              "kind": "phones",
+              "urls": [
+                "https://tierlistify.netlify.app/"
+              ]
+            }
+          },
+          "copy": {
+            "title": "Tierlistify (mobile)"
+          },
+          "key": "phone",
+          "order": 11,
+          "surface": "software-portfolio"
+        },
+        {
+          "config": {
+            "component": "tierlistify",
+            "open": "in-window",
+            "pinned": true,
+            "route": "/apps/tierlistify",
+            "window": {
+              "height": 700,
+              "width": 1000
+            }
+          },
+          "surface": "nickel-desktop"
+        }
+      ],
+      "slug": "tierlistify",
+      "title": "Tierlistify",
+      "visibility": "public"
+    },
+    {
+      "assets": [
+        {
+          "alt": "Lanterns over a crowded street",
+          "blob": "sha256:e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd",
+          "role": "original"
+        }
+      ],
+      "date": {
+        "value": "2025-10-03"
+      },
+      "facts": {
+        "palette": [
+          "#1a1a2e",
+          "#e94560"
+        ],
+        "pixelHeight": 2400,
+        "pixelWidth": 3200
+      },
+      "id": "01JB7Z00000000000000000003",
+      "kind": "artwork",
+      "mediums": [
+        "digital"
+      ],
+      "placements": [
+        {
+          "config": {},
+          "order": 1,
+          "surface": "art-portfolio"
+        },
+        {
+          "config": {
+            "titled": true
+          },
+          "surface": "holodeck-art-room"
+        }
+      ],
+      "richDescription": {
+        "markdownBlob": "sha256:1bbb432b3ceb64da917a7ee9230b38f52fd3a92a2950afe7d6316584fec22cd8"
+      },
+      "slug": "night-market-study",
+      "title": "Night Market Study",
+      "visibility": "public"
+    },
+    {
+      "assets": [
+        {
+          "blob": "sha256:52df5f4e3ed127189bd4ef620c5a5f2783175ca5c42f20074902f83bf2450fb9",
+          "role": "original"
+        }
+      ],
+      "facts": {
+        "physical": {
+          "height": 29.7,
+          "unit": "cm",
+          "width": 21
+        }
+      },
+      "id": "01JB7Z00000000000000000004",
+      "kind": "artwork",
+      "mediums": [
+        "graphite"
+      ],
+      "placements": [
+        {
+          "config": {},
+          "surface": "holodeck-art-room"
+        }
+      ],
+      "private": {
+        "notes": "TODO: rescan at 600 dpi"
+      },
+      "slug": "left-hand-sketch",
+      "title": "Left-Hand Sketch",
+      "visibility": "draft"
+    },
+    {
+      "assets": [
+        {
+          "blob": "sha256:a854b5d5a63c74824fc8a80f707d9eef47009fbe5c3c305c3d37b09b7705f440",
+          "role": "cover"
+        }
+      ],
+      "id": "01JB7Z00000000000000000005",
+      "kind": "collection",
+      "members": [
+        "01JB7Z00000000000000000003",
+        "01JB7Z00000000000000000004"
+      ],
+      "placements": [
+        {
+          "config": {
+            "section": "collections"
+          },
+          "order": 2,
+          "surface": "art-portfolio"
+        },
+        {
+          "config": {},
+          "order": 1,
+          "surface": "holodeck-art-room"
+        }
+      ],
+      "slug": "sketches",
+      "summary": "Quick studies.",
+      "title": "Sketches",
+      "visibility": "public"
+    },
+    {
+      "aliases": [
+        "dj-crate"
+      ],
+      "id": "01JB7Z00000000000000000006",
+      "kind": "collection",
+      "members": [
+        "01JB7Z00000000000000000007"
+      ],
+      "placements": [
+        {
+          "config": {},
+          "surface": "holodeck-dj-room"
+        }
+      ],
+      "slug": "music",
+      "title": "Music",
+      "visibility": "public"
+    },
+    {
+      "assets": [
+        {
+          "blob": "sha256:00f3af975ce2a6bec384c88533857707d12a87ac81a026b60c9189a16c82be8e",
+          "role": "audio"
+        }
+      ],
+      "credits": [
+        {
+          "name": "Nicole Belovoskey",
+          "role": "artist"
+        }
+      ],
+      "facts": {
+        "bpm": 124,
+        "camelot": "8A",
+        "duration": 214.5,
+        "firstBeat": 0.112,
+        "key": "A minor",
+        "start": 32
+      },
+      "id": "01JB7Z00000000000000000007",
+      "kind": "track",
+      "links": [
+        {
+          "rel": "listen",
+          "url": "https://3d.saucedog.art/dj"
+        }
+      ],
+      "placements": [
+        {
+          "config": {},
+          "order": 1,
+          "surface": "holodeck-dj-room"
+        }
+      ],
+      "slug": "first-light",
+      "title": "First Light",
+      "visibility": "public"
+    },
+    {
+      "assets": [
+        {
+          "blob": "sha256:b04216546057e8659fecdec71043ffe7e3220178fa3df37650d6fdbb631dcda8",
+          "role": "original"
+        }
+      ],
+      "facts": {
+        "pixelHeight": 3024,
+        "pixelWidth": 4032
+      },
+      "id": "01JB7Z00000000000000000008",
+      "kind": "photo",
+      "slug": "fog-bridge",
+      "title": "Fog Bridge",
+      "visibility": "draft"
+    },
+    {
+      "assets": [
+        {
+          "blob": "sha256:3dfd34a610d1d79e2d1265ca926666ca0da7089c4a718816089b0bd6b7a368d3",
+          "role": "video"
+        }
+      ],
+      "facts": {
+        "duration": 61.2,
+        "fps": 30,
+        "pixelHeight": 1080,
+        "pixelWidth": 1920
+      },
+      "id": "01JB7Z00000000000000000009",
+      "kind": "video",
+      "placements": [
+        {
+          "config": {
+            "preview": {
+              "kind": "none"
+            }
+          },
+          "surface": "design-portfolio"
+        }
+      ],
+      "slug": "laser-room-walkthrough",
+      "title": "Laser Room Walkthrough",
+      "visibility": "public"
+    },
+    {
+      "facts": {
+        "wordCount": 1200
+      },
+      "id": "01JB7Z0000000000000000000A",
+      "kind": "writing",
+      "richDescription": {
+        "markdownBlob": "sha256:4b403db556b71b0fa8a5be908a99b7cec195388f6671621caf2f0b02ae395807"
+      },
+      "slug": "on-journaling",
+      "title": "On Journaling",
+      "visibility": "draft"
+    },
+    {
+      "facts": {
+        "site": "holodeck-art-room"
+      },
+      "id": "01JB7Z0000000000000000000B",
+      "kind": "experience",
+      "links": [
+        {
+          "rel": "live",
+          "url": "https://3d.saucedog.art/art"
+        }
+      ],
+      "placements": [
+        {
+          "config": {
+            "viewport": "desktop"
+          },
+          "order": 20,
+          "surface": "holodeck-showroom"
+        }
+      ],
+      "slug": "art-room",
+      "title": "Art Room",
+      "visibility": "public"
+    }
+  ],
+  "ownedDomains": [
+    "nicolebelovoskey.com",
+    "*.nicolebelovoskey.com",
+    "*.saucedog.art",
+    "rpg-quests.netlify.app",
+    "tierlistify.netlify.app"
+  ],
+  "profile": {
+    "education": [
+      {
+        "degree": "BS",
+        "end": "2021",
+        "field": "Computer Science",
+        "institution": "Example University"
+      }
+    ],
+    "experience": [
+      {
+        "end": "2024-01",
+        "highlights": [
+          "Shipped things"
+        ],
+        "organization": "Example Co",
+        "role": "Software Engineer",
+        "start": "2022-06"
+      }
+    ],
+    "headline": "Software engineer",
+    "links": {
+      "email": "hello@example.com",
+      "github": "https://github.com/nick5616"
+    },
+    "name": "Nicole Belovoskey",
+    "summary": "Fixture profile."
+  },
+  "schemaVersion": 1,
+  "surfaces": [
+    {
+      "baseUrl": "https://nickeltools.dev",
+      "id": "nickel-desktop",
+      "label": "Nickel Tools desktop"
+    },
+    {
+      "baseUrl": "https://software.nicolebelovoskey.com",
+      "id": "software-portfolio",
+      "label": "software.nicolebelovoskey.com"
+    },
+    {
+      "id": "design-portfolio",
+      "label": "Design portfolio"
+    },
+    {
+      "id": "art-portfolio",
+      "label": "Art portfolio"
+    },
+    {
+      "baseUrl": "https://3d.saucedog.art",
+      "id": "holodeck-showroom",
+      "label": "3D showroom"
+    },
+    {
+      "baseUrl": "https://3d.saucedog.art",
+      "id": "holodeck-art-room",
+      "label": "3D art room"
+    },
+    {
+      "baseUrl": "https://3d.saucedog.art",
+      "id": "holodeck-dj-room",
+      "label": "3D DJ room"
+    }
+  ],
+  "taxonomy": {
+    "categories": [
+      {
+        "icon": "🤖",
+        "label": "AI Productivity",
+        "slug": "ai-productivity"
+      },
+      {
+        "icon": "🌐",
+        "label": "Immersive Web",
+        "slug": "immersive-web"
+      }
+    ],
+    "mediums": [
+      {
+        "label": "Digital",
+        "slug": "digital"
+      },
+      {
+        "label": "Graphite",
+        "slug": "graphite"
+      }
+    ],
+    "tags": [
+      {
+        "label": "Gamification",
+        "slug": "gamification"
+      },
+      {
+        "label": "Journaling",
+        "slug": "journaling"
+      }
+    ],
+    "tech": [
+      {
+        "label": "TypeScript",
+        "slug": "typescript"
+      },
+      {
+        "label": "React",
+        "slug": "react"
+      },
+      {
+        "label": "LLM APIs",
+        "slug": "llm-apis"
+      }
+    ],
+    "viewports": [
+      {
+        "height": 800,
+        "label": "Desktop",
+        "slug": "desktop",
+        "width": 1200
+      },
+      {
+        "height": 852,
+        "label": "Phone",
+        "slug": "phone",
+        "width": 393
+      }
+    ]
+  }
+}

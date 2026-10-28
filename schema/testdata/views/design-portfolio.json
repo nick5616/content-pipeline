@@ -1,0 +1,60 @@
+{
+  "entries": [
+    {
+      "category": null,
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z00000000000000000009",
+      "key": null,
+      "kind": "video",
+      "links": [],
+      "mediums": [],
+      "order": null,
+      "preview": {
+        "kind": "none",
+        "urls": []
+      },
+      "slug": "laser-room-walkthrough",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "thumbnail": {
+        "alt": null,
+        "height": 900,
+        "lqip": "data:image/webp;base64,UklGRhIAAABXRUJQVlA4IAYAAAAwAQCdASoBAAEAAkA4JaQAA3AA/v3AgAA=",
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/2a61b914721d78e065c8264ca178b087aa73a5a194147fc8c48e2ecf3b8707a6/320.webp",
+            "width": 320
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/2a61b914721d78e065c8264ca178b087aa73a5a194147fc8c48e2ecf3b8707a6/800.webp",
+            "width": 800
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/2a61b914721d78e065c8264ca178b087aa73a5a194147fc8c48e2ecf3b8707a6/1600.webp",
+            "width": 1600
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/2a61b914721d78e065c8264ca178b087aa73a5a194147fc8c48e2ecf3b8707a6/1600.webp",
+        "width": 1600
+      },
+      "title": "Laser Room Walkthrough",
+      "why": ""
+    }
+  ],
+  "filters": {
+    "tags": [],
+    "tech": []
+  },
+  "pipelineVersion": "0.1.0",
+  "taxonomy": {
+    "categories": [],
+    "mediums": [],
+    "tags": [],
+    "tech": []
+  },
+  "view": "design-portfolio",
+  "viewVersion": 1
+}

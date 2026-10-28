@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WritingFacts",
+  "type": "object",
+  "properties": {
+    "wordCount": { "type": "integer", "minimum": 0 },
+    "publication": { "description": "Where it was published, if anywhere.", "type": "string", "maxLength": 200 }
+  },
+  "additionalProperties": false
+}

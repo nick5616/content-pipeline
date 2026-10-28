@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PublicManifest",
+  "description": "The public projection written to the public bucket: only public items, and no private fields anywhere.",
+  "type": "object",
+  "allOf": [{ "$ref": "manifest.schema.json" }],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "visibility": { "const": "public" }
+        },
+        "not": { "required": ["private"] }
+      }
+    }
+  }
+}

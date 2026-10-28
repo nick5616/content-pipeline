@@ -1,0 +1,66 @@
+{
+  "entries": [
+    {
+      "category": null,
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z00000000000000000005",
+      "key": null,
+      "kind": "collection",
+      "links": [],
+      "mediums": [],
+      "order": 1,
+      "pieces": [
+        {
+          "date": {
+            "display": "Oct 3, 2025",
+            "label": null,
+            "sortKey": 20251003,
+            "value": "2025-10-03"
+          },
+          "description": null,
+          "id": "01JB7Z00000000000000000003",
+          "image": {
+            "alt": "Lanterns over a crowded street",
+            "height": 1200,
+            "lqip": "data:image/webp;base64,UklGRhIAAABXRUJQVlA4IAYAAAAwAQCdASoBAAEAAkA4JaQAA3AA/v3AgAA=",
+            "srcset": [
+              {
+                "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/320.webp",
+                "width": 320
+              },
+              {
+                "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/800.webp",
+                "width": 800
+              },
+              {
+                "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/1600.webp",
+                "width": 1600
+              }
+            ],
+            "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd/1600.webp",
+            "width": 1600
+          },
+          "slug": "night-market-study",
+          "title": "Night Market Study"
+        }
+      ],
+      "slug": "sketches",
+      "status": null,
+      "summary": "Quick studies.",
+      "tags": [],
+      "tech": [],
+      "title": "Sketches",
+      "why": ""
+    }
+  ],
+  "pipelineVersion": "0.1.0",
+  "taxonomy": {
+    "categories": [],
+    "mediums": [],
+    "tags": [],
+    "tech": []
+  },
+  "view": "holodeck-art-room",
+  "viewVersion": 1
+}

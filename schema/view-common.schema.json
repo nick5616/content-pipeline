@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canon view definitions",
+  "description": "Shared by every surface view: resolved dates, assets, links and the common entry.",
+  "$defs": {
+    "resolvedDate": {
+      "description": "A date as views ship it: display and sortKey precomputed, so no site parses dates.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "$ref": "common.schema.json#/$defs/isoPartialDate"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "display": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sortKey": {
+          "description": "YYYYMMDD with 00 for a missing month or day, so 2025-10 is 20251000.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99991231
+        }
+      },
+      "required": [
+        "value",
+        "label",
+        "display",
+        "sortKey"
+      ],
+      "additionalProperties": false
+    },
+    "resolvedAsset": {
+      "description": "An image as views ship it. Every URL points at the public bucket.",
+      "type": "object",
+      "properties": {
+        "url": {
+          "$ref": "common.schema.json#/$defs/httpUrl"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "srcset": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "$ref": "common.schema.json#/$defs/httpUrl"
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "url",
+              "width"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "lqip": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^data:image/"
+        },
+        "alt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "url",
+        "width",
+        "height",
+        "srcset",
+        "lqip",
+        "alt"
+      ],
+      "additionalProperties": false
+    },
+    "resolvedLink": {
+      "type": "object",
+      "properties": {
+        "rel": {
+          "$ref": "common.schema.json#/$defs/linkRel"
+        },
+        "url": {
+          "$ref": "common.schema.json#/$defs/httpUrl"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "rel",
+        "url",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "resolvedTaxonomy": {
+      "description": "Only the terms a view's entries use.",
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        },
+        "tech": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        },
+        "mediums": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/taxonomyTerm"
+          }
+        }
+      },
+      "required": [
+        "categories",
+        "tech",
+        "mediums",
+        "tags"
+      ],
+      "additionalProperties": false
+    },
+    "entry": {
+      "description": "What every view entry carries. Copy is already resolved.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/ulid"
+        },
+        "slug": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "key": {
+          "description": "The placement key, when an item is placed more than once on this surface.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "common.schema.json#/$defs/kind"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        },
+        "date": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/resolvedDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/taxonomyTerm"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tech": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/slug"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/slug"
+          }
+        },
+        "mediums": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/slug"
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resolvedLink"
+          }
+        },
+        "order": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "featured": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "key",
+        "kind",
+        "title",
+        "summary",
+        "why",
+        "date",
+        "status",
+        "category",
+        "tech",
+        "tags",
+        "mediums",
+        "links",
+        "order",
+        "featured"
+      ]
+    },
+    "viewHeader": {
+      "description": "Fields every view starts with (D12): no timestamps, no manifest hash.",
+      "type": "object",
+      "properties": {
+        "viewVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pipelineVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "taxonomy": {
+          "$ref": "#/$defs/resolvedTaxonomy"
+        }
+      },
+      "required": [
+        "view",
+        "viewVersion",
+        "pipelineVersion",
+        "taxonomy",
+        "entries"
+      ]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            ui/package-lock.json
+            client/package-lock.json
+      - name: Install Task
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+      - name: Install jq
+        run: sudo apt-get install -y -q jq
+
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - name: go vet
+        run: go vet ./... && go vet -tags integration ./...
+      - name: UI install
+        run: npm ci
+        working-directory: ui
+      - name: UI typecheck
+        run: npm run typecheck
+        working-directory: ui
+      - name: vitest
+        run: npm test
+        working-directory: ui
+      - name: UI build
+        run: npm run build
+        working-directory: ui
+      - name: Client install
+        run: npm ci
+        working-directory: client
+      - name: Client typecheck
+        run: npm run typecheck
+        working-directory: client
+      - name: Client tests (Zod agrees with Go on every fixture)
+        run: npm test
+        working-directory: client
+      - name: go test
+        run: go test ./...
+      - name: Integration (fake-gcs-server)
+        run: task test:integration
+      - name: Codegen drift
+        run: |
+          task gen
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain
+            git diff
+            echo "::error::generated files are stale; run task gen and commit"
+            exit 1
+          fi

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DesignPortfolioPlacement",
+  "type": "object",
+  "properties": {
+    "preview": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "enum": ["auto", "none", "desktop", "phones", "laser-room"] },
+        "urls": { "description": "Pages to frame. Must be on owned domains.", "type": "array", "items": { "$ref": "../../common.schema.json#/$defs/httpUrl" }, "minItems": 1 }
+      },
+      "required": ["kind"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
