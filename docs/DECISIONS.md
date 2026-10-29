@@ -39,6 +39,7 @@ rewrite old ones. Full context: [plans/M0-M1.md](plans/M0-M1.md).
 | D32 | 2026-10-28 | PNGs are sanitized in Go with a chunk allowlist, not exiftool (which leaves unreadable zTXt raw profiles, GPS included). Orientation stored in a PNG eXIf chunk is dropped with it; browsers rarely honor it anyway. |
 | D33 | 2026-10-28 | Local API 1.1.0 (additive): IngestBatch files gain `note` (why nothing changed), and OpType gains `archive-original` (D27). |
 | D34 | 2026-10-28 | M3 archives every staged original in `<cache>/originals/`, not only the ones a manifest asset references: two originals that differ only in metadata (say, GPS) sanitize to one blob, and both should reach the archive. |
+| D35 | 2026-10-28 | The `heif-dec` tool also resolves as `heif-convert`, its name before libheif 1.18 (Ubuntu 24.04 ships 1.17.6). Ubuntu splits HEVC out of `libheif-examples`: `libheif-plugin-libde265` (decode, needed by M4) and `libheif-plugin-x265` (encode, test fixtures only); bootstrap and CI install both. The allowlist gains `Meta:PrimaryItemReference`, the only structural tag a real sanitized HEIC added. |
 
 ## M1 schema calls (approved 2026-10-28)
 

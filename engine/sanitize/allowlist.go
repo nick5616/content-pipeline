@@ -83,7 +83,9 @@ var allowedTags = map[string]map[string]bool{
 		"ParallelismType", "ChromaFormat", "BitDepthLuma", "BitDepthChroma",
 		"AverageFrameRate", "ConstantFrameRate", "NumTemporalLayers", "TemporalIDNested",
 		"AV1ConfigurationVersion", "AV1Configuration", "ImageGridDimensions"),
-	"PDF": set("Linearized", "PDFVersion", "PageCount"),
+	// HEIF's meta box: which item is the main image (an item id).
+	"Meta": set("PrimaryItemReference"),
+	"PDF":  set("Linearized", "PDFVersion", "PageCount"),
 }
 
 // trackTags are structural tags inside QuickTime tracks (Track1, Track2, ...).

@@ -24,7 +24,7 @@ have() { command -v "$1" >/dev/null 2>&1 && [[ "$(command -v "$1")" != /mnt/* ]]
 mkdir -p "$LOCAL/bin" "$(dirname "$ENV_FILE")"
 
 step "apt packages"
-APT_PKGS=(ffmpeg libimage-exiftool-perl qpdf libheif-examples jq unzip curl ca-certificates gnupg)
+APT_PKGS=(ffmpeg libimage-exiftool-perl qpdf libheif-examples libheif-plugin-libde265 libheif-plugin-x265 jq unzip curl ca-certificates gnupg)
 missing=()
 for p in "${APT_PKGS[@]}"; do dpkg -s "$p" >/dev/null 2>&1 || missing+=("$p"); done
 if ((${#missing[@]})); then
@@ -95,7 +95,7 @@ echo "wrote $ENV_FILE (sourced from ~/.bashrc)"
 step "summary"
 # shellcheck disable=SC1090
 . "$ENV_FILE"
-for t in go node npm task ffmpeg ffprobe exiftool qpdf heif-dec heif-enc jq gcloud docker; do
+for t in go node npm task ffmpeg ffprobe exiftool qpdf heif-convert heif-enc jq gcloud docker; do
   if p=$(command -v "$t" 2>/dev/null); then
     [[ "$p" == /mnt/* ]] && flag="  <-- Windows binary, not Linux" || flag=""
     printf '  %-9s %s%s\n' "$t" "$p" "$flag"

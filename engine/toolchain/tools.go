@@ -22,13 +22,17 @@ type Tool struct {
 }
 
 // Required are the tools ingest and jobs need. heif-dec (libheif) decodes
-// HEIC for derivatives (D26), since ffmpeg 6.1 can't.
+// HEIC for derivatives (D26), since ffmpeg 6.1 can't. libheif before 1.18
+// (Ubuntu 24.04 ships 1.17) names it heif-convert; see aliases.
 var Required = []string{"ffmpeg", "ffprobe", "exiftool", "qpdf", "heif-dec"}
 
 // ErrWindowsBinary means the tool resolved to a Windows install under /mnt/.
 // WSL appends the Windows PATH, and those binaries see different files,
 // config and credentials than Linux ones.
 var ErrWindowsBinary = errors.New("resolves to a Windows binary under /mnt/; install the Linux one")
+
+// aliases are other names a tool has had, tried in order after its own.
+var aliases = map[string][]string{"heif-dec": {"heif-convert"}}
 
 type spec struct {
 	args []string
@@ -40,7 +44,7 @@ var specs = map[string]spec{
 	"ffprobe":  {[]string{"-version"}, regexp.MustCompile(`(?m)^ffprobe version (\S+)`)},
 	"exiftool": {[]string{"-ver"}, regexp.MustCompile(`^\s*(\d+\.\d+)\s*$`)},
 	"qpdf":     {[]string{"--version"}, regexp.MustCompile(`(?m)^qpdf version (\S+)`)},
-	"heif-dec": {[]string{"--version"}, regexp.MustCompile(`(?m)^(?:heif-dec\s+(?:version\s+)?)?v?(\d+\.\d+\.\d+)\b`)},
+	"heif-dec": {[]string{"--version"}, regexp.MustCompile(`(?m)^(?:heif-(?:dec|convert)\s+(?:version\s+)?)?v?(\d+\.\d+\.\d+)\b`)},
 }
 
 // ParseVersion extracts the version from a tool's version output.
@@ -83,8 +87,14 @@ func (f Finder) Lookup(ctx context.Context, name string) (Tool, error) {
 	}
 
 	p, err := lookPath(name)
+	for _, alt := range aliases[name] {
+		if err == nil {
+			break
+		}
+		p, err = lookPath(alt)
+	}
 	if err != nil {
-		return Tool{Name: name}, fmt.Errorf("%s: not found on PATH", name)
+		return Tool{Name: name}, fmt.Errorf("%s: not found on PATH", strings.Join(append([]string{name}, aliases[name]...), " or "))
 	}
 	if abs, err := filepath.Abs(p); err == nil {
 		p = abs

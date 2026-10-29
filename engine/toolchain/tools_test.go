@@ -74,6 +74,23 @@ func TestLookup(t *testing.T) {
 		t.Fatal("want not-found error")
 	}
 
+	// libheif 1.17 calls the decoder heif-convert.
+	old := Finder{
+		LookPath: func(name string) (string, error) {
+			if name == "heif-convert" {
+				return "/usr/bin/heif-convert", nil
+			}
+			return "", errors.New("nope")
+		},
+		Run: func(context.Context, string, ...string) ([]byte, error) {
+			return []byte("1.17.6\nlibheif: 1.17.6\n"), nil
+		},
+	}
+	tool, err = old.Lookup(ctx, "heif-dec")
+	if err != nil || tool != (Tool{"heif-dec", "/usr/bin/heif-convert", "1.17.6"}) {
+		t.Fatalf("got %+v, %v", tool, err)
+	}
+
 	if _, err := (Finder{}).Lookup(ctx, "rm"); err == nil {
 		t.Fatal("want unknown-tool error")
 	}
