@@ -82,10 +82,17 @@ var allowedTags = map[string]map[string]bool{
 		"ConstraintIndicatorFlags", "GeneralLevelIDC", "MinSpatialSegmentationIDC",
 		"ParallelismType", "ChromaFormat", "BitDepthLuma", "BitDepthChroma",
 		"AverageFrameRate", "ConstantFrameRate", "NumTemporalLayers", "TemporalIDNested",
-		"AV1ConfigurationVersion", "AV1Configuration", "ImageGridDimensions"),
-	// HEIF's meta box: which item is the main image (an item id).
-	"Meta": set("PrimaryItemReference"),
-	"PDF":  set("Linearized", "PDFVersion", "PageCount"),
+		"AV1ConfigurationVersion", "AV1Configuration", "ImageGridDimensions",
+		// The clap box: an item's crop (an iPhone HDR gain map has one; D44).
+		"CleanAperture"),
+	// HEIF's meta box: which item is the main image (an item id), and its
+	// size.
+	"Meta": set("PrimaryItemReference", "MetaImageSize"),
+	// An iPhone HDR gain map's own XMP item survives -all= (D44). It holds
+	// only the gain map format's version and the XMP library's version.
+	"XMP-HDRGainMap": set("HDRGainMapVersion"),
+	"XMP-x":          set("XMPToolkit"),
+	"PDF":            set("Linearized", "PDFVersion", "PageCount"),
 }
 
 // trackTags are structural tags inside QuickTime tracks (Track1, Track2, ...).

@@ -13,7 +13,6 @@ func stubs() []*cobra.Command {
 	for _, s := range []struct{ use, short, milestone string }{
 		{"jobs", "List or retry derived-asset jobs", "M4"},
 		{"view", "Print a surface's resolved view", "M5"},
-		{"import", "Import content.ts or a bucket", "M7"},
 		{"gc", "Delete unreferenced blobs", "M8"},
 		{"rollback", "Restore an earlier manifest", "M8"},
 	} {

@@ -37,6 +37,9 @@ type Object struct {
 	// SHA256 is the x-goog-meta-sha256 metadata Canon sets on every object;
 	// empty if someone else wrote it.
 	SHA256 string
+	// Metadata is every custom metadata field, sha256 included. Imports read
+	// the old bucket's art-name, created and so on from it.
+	Metadata map[string]string
 }
 
 // MetaSHA256 is the custom metadata key holding an object's SHA-256.
@@ -131,7 +134,7 @@ func (c Client) Write(ctx context.Context, bucket, name string, r io.Reader, o W
 }
 
 func object(a *storage.ObjectAttrs) Object {
-	return Object{Name: a.Name, Size: a.Size, Generation: a.Generation, SHA256: a.Metadata[MetaSHA256]}
+	return Object{Name: a.Name, Size: a.Size, Generation: a.Generation, SHA256: a.Metadata[MetaSHA256], Metadata: a.Metadata}
 }
 
 // classify maps storage errors onto ErrNotExist, ErrPrecondition and

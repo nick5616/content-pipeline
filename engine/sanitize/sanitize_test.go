@@ -142,6 +142,23 @@ func TestFailsClosedOnUnknownTag(t *testing.T) {
 	}
 }
 
+// D44: what survives -all= in a real iPhone HEIC with an HDR gain map. The
+// neighbors that could carry dates or software stay out.
+func TestHDRGainMapTags(t *testing.T) {
+	for _, k := range []string{"Meta:MetaImageSize", "QuickTime:CleanAperture",
+		"XMP-HDRGainMap:HDRGainMapVersion", "XMP-x:XMPToolkit"} {
+		if !allowed(k) {
+			t.Errorf("%s: not allowed", k)
+		}
+	}
+	for _, k := range []string{"XMP-xmp:CreatorTool", "XMP-xmp:CreateDate", "XMP-photoshop:DateCreated",
+		"XMP-HDRGainMap:Unknown", "XMP-x:Other", "XMP-apple-fi:Regions"} {
+		if allowed(k) {
+			t.Errorf("%s: allowed", k)
+		}
+	}
+}
+
 func TestPNGChunks(t *testing.T) {
 	in := filepath.Join(testmedia.Dir(t), "png.png")
 	findings, err := pngFindings(in)

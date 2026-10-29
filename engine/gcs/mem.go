@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"maps"
 	"sort"
 	"strings"
 	"sync"
@@ -166,7 +167,7 @@ func (m *Mem) Write(ctx context.Context, bucket, name string, r io.Reader, opts 
 func (m *Mem) Close() error { return nil }
 
 func (o *memObject) object(name string) Object {
-	return Object{Name: name, Size: int64(len(o.data)), Generation: o.gen, SHA256: o.meta[MetaSHA256]}
+	return Object{Name: name, Size: int64(len(o.data)), Generation: o.gen, SHA256: o.meta[MetaSHA256], Metadata: maps.Clone(o.meta)}
 }
 
 // Put stores an object directly, bypassing faults and preconditions, as if
@@ -176,6 +177,16 @@ func (m *Mem) Put(bucket, name string, data []byte, sha string) int64 {
 	defer m.mu.Unlock()
 	m.gen++
 	m.buckets[bucket][name] = &memObject{data: bytes.Clone(data), gen: m.gen, meta: map[string]string{MetaSHA256: sha}}
+	return m.gen
+}
+
+// PutMeta stores an object with arbitrary custom metadata, like one another
+// tool wrote.
+func (m *Mem) PutMeta(bucket, name string, data []byte, meta map[string]string) int64 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.gen++
+	m.buckets[bucket][name] = &memObject{data: bytes.Clone(data), gen: m.gen, meta: maps.Clone(meta)}
 	return m.gen
 }
 
