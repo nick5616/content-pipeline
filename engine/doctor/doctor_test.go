@@ -28,10 +28,10 @@ func fakeEnv(t *testing.T) Env {
 		LookupTool: func(_ context.Context, name string) (toolchain.Tool, error) {
 			return toolchain.Tool{Name: name, Path: "/usr/bin/" + name, Version: "1.0"}, nil
 		},
-		Credentials: func(context.Context) error { return nil },
-		BucketAttrs: func(context.Context, string) error { return nil },
-		Writable:    writable,
-		Docker:      func(context.Context) error { return nil },
+		Credentials:     func(context.Context) error { return nil },
+		BucketReachable: func(context.Context, string) error { return nil },
+		Writable:        writable,
+		Docker:          func(context.Context) error { return nil },
 	}
 }
 
@@ -126,7 +126,7 @@ func TestMissingToolKeepsRecordedVersion(t *testing.T) {
 func TestBucketsUnsetSkipped(t *testing.T) {
 	env := fakeEnv(t)
 	env.Config.PrivateBucket, env.Config.PublicBucket, env.Config.ArchiveBucket = "", "", ""
-	env.BucketAttrs = func(context.Context, string) error { t.Fatal("must not call GCS"); return nil }
+	env.BucketReachable = func(context.Context, string) error { t.Fatal("must not call GCS"); return nil }
 	r := Run(context.Background(), env)
 	expect(t, r, map[string]Status{"buckets": Skipped})
 	if r.Failed() {
@@ -136,7 +136,7 @@ func TestBucketsUnsetSkipped(t *testing.T) {
 
 func TestBucketUnreachableFails(t *testing.T) {
 	env := fakeEnv(t)
-	env.BucketAttrs = func(_ context.Context, b string) error {
+	env.BucketReachable = func(_ context.Context, b string) error {
 		if b == "canon-pub" {
 			return errors.New("storage: bucket doesn't exist")
 		}
@@ -186,7 +186,7 @@ func TestConfig(t *testing.T) {
 
 	env = fakeEnv(t)
 	env.Config.PublicBucket = "artandmedia"
-	env.BucketAttrs = func(context.Context, string) error { t.Fatal("must not call GCS"); return nil }
+	env.BucketReachable = func(context.Context, string) error { t.Fatal("must not call GCS"); return nil }
 	expect(t, Run(context.Background(), env), map[string]Status{"config": Fail, "buckets": Skipped})
 }
 

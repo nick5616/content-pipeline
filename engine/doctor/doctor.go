@@ -14,6 +14,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"cloud.google.com/go/storage"
+	"google.golang.org/api/iterator"
+
 	"github.com/nick5616/canon/engine/config"
 	"github.com/nick5616/canon/engine/gcs"
 	"github.com/nick5616/canon/engine/toolchain"
@@ -59,9 +62,11 @@ type Env struct {
 
 	LookupTool  func(ctx context.Context, name string) (toolchain.Tool, error)
 	Credentials func(ctx context.Context) error // mints one token
-	BucketAttrs func(ctx context.Context, bucket string) error
-	Writable    func(dir string) error
-	Docker      func(ctx context.Context) error
+	// BucketReachable lists at most one object. Canon's service account has
+	// object roles only, so reading the bucket's own settings would be denied.
+	BucketReachable func(ctx context.Context, bucket string) error
+	Writable        func(dir string) error
+	Docker          func(ctx context.Context) error
 }
 
 // StateFile is where doctor records tool versions between runs.
@@ -146,7 +151,7 @@ func Run(ctx context.Context, env Env) Report {
 	default:
 		for _, b := range cfg.Buckets() {
 			name := b.Role + " bucket"
-			if err := env.BucketAttrs(ctx, b.Name); err != nil {
+			if err := env.BucketReachable(ctx, b.Name); err != nil {
 				add(name, Fail, "gs://%s: %v", b.Name, err)
 			} else {
 				add(name, OK, "gs://%s reachable", b.Name)
@@ -222,7 +227,7 @@ func NewEnv(cfg config.Config, path string, loadErr error) Env {
 			_, err = ts.Token()
 			return err
 		},
-		BucketAttrs: func(ctx context.Context, bucket string) error {
+		BucketReachable: func(ctx context.Context, bucket string) error {
 			ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 			defer cancel()
 			c, err := gcs.NewClient(ctx, cfg)
@@ -230,8 +235,12 @@ func NewEnv(cfg config.Config, path string, loadErr error) Env {
 				return err
 			}
 			defer c.Close()
-			_, err = c.BucketAttrs(ctx, bucket)
-			return err
+			it := c.Bucket(bucket).Objects(ctx, &storage.Query{})
+			it.PageInfo().MaxSize = 1
+			if _, err := it.Next(); err != nil && !errors.Is(err, iterator.Done) {
+				return err
+			}
+			return nil
 		},
 		Writable: writable,
 		Docker: func(ctx context.Context) error {
