@@ -60,10 +60,10 @@ func TestAllOK(t *testing.T) {
 			t.Errorf("%s: %s %s", c.Name, c.Status, c.Detail)
 		}
 	}
-	if len(r.Tools) != 4 || r.Failed() {
+	if len(r.Tools) != len(toolchain.Required) || r.Failed() {
 		t.Fatalf("tools %v failed=%v", r.Tools, r.Failed())
 	}
-	if len(r.Checks) != 1+2+4+1+3+1 {
+	if len(r.Checks) != 1+2+len(toolchain.Required)+1+3+1 {
 		t.Errorf("unexpected checks: %+v", r.Checks)
 	}
 }

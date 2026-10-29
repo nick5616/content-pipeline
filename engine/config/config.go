@@ -23,6 +23,9 @@ import (
 // DefaultPort is where `canon serve` listens unless config or --port says otherwise.
 const DefaultPort = 4747
 
+// DefaultMaxIngestBytes is the per-file ingest cap when config doesn't set one.
+const DefaultMaxIngestBytes int64 = 8 << 30
+
 // Config is the parsed config file with defaults applied.
 type Config struct {
 	Project string `yaml:"project"`
@@ -48,6 +51,12 @@ type Config struct {
 
 	CacheDir string `yaml:"cacheDir"`
 	StateDir string `yaml:"stateDir"`
+
+	// ProfileName seeds profile.name when a working manifest is created from
+	// scratch (the schema requires a name).
+	ProfileName string `yaml:"profileName"`
+	// MaxIngestBytes caps one ingested file. Default 8 GiB.
+	MaxIngestBytes int64 `yaml:"maxIngestBytes"`
 
 	Serve struct {
 		Port int `yaml:"port"`
@@ -113,6 +122,9 @@ func (c *Config) applyDefaults(getenv Getenv) {
 	}
 	if c.Serve.Port == 0 {
 		c.Serve.Port = DefaultPort
+	}
+	if c.MaxIngestBytes == 0 {
+		c.MaxIngestBytes = DefaultMaxIngestBytes
 	}
 }
 
@@ -210,6 +222,12 @@ func (c Config) Validate() []Problem {
 	}
 	if !filepath.IsAbs(c.StateDir) {
 		add("stateDir", "%q must be an absolute path", c.StateDir)
+	}
+	if len(c.ProfileName) > 200 {
+		add("profileName", "longer than 200 characters")
+	}
+	if c.MaxIngestBytes < 1<<20 {
+		add("maxIngestBytes", "%d is below 1 MiB", c.MaxIngestBytes)
 	}
 	if p := c.Serve.Port; p < 1024 || p > 65535 {
 		add("serve.port", "%d is outside 1024 to 65535", p)

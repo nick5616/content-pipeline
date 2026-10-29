@@ -31,5 +31,10 @@ publicCorsOrigins:
 # cacheDir: ~/.cache/canon
 # stateDir: ~/.local/state/canon
 
+# Name for profile.name when Canon creates a working manifest from scratch.
+profileName: Nicole Belovoskey
+# Largest single file ingest accepts (bytes). Default 8 GiB.
+# maxIngestBytes: 8589934592
+
 serve:
   port: 4747

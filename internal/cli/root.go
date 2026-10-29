@@ -26,7 +26,7 @@ func newRoot() *cobra.Command {
 		SilenceErrors: true,
 	}
 	root.PersistentFlags().String("config", "", "config file (default $XDG_CONFIG_HOME/canon/config.yaml)")
-	root.AddCommand(newVersion(), newDoctor(), newServe(), newConfig())
+	root.AddCommand(newVersion(), newDoctor(), newServe(), newConfig(), newIngest())
 	root.AddCommand(stubs()...)
 	return root
 }

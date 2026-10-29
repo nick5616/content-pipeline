@@ -110,6 +110,10 @@
         "blob": {
           "$ref": "#/$defs/blobRef"
         },
+        "original": {
+          "description": "SHA-256 of the untouched original the blob was sanitized from (D28). Private: the public projection drops it.",
+          "$ref": "#/$defs/blobRef"
+        },
         "alt": {
           "type": "string",
           "maxLength": 1000

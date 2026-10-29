@@ -18,7 +18,6 @@ func stubs() []*cobra.Command {
 		{"show", "Show one item", "M3"},
 		{"item", "Create, edit or remove items", "M3"},
 		{"taxonomy", "Edit categories, tech, mediums and tags", "M3"},
-		{"ingest", "Sanitize files and add them as blobs", "M2"},
 		{"plan", "Compute what apply would change", "M3"},
 		{"apply", "Apply a saved plan", "M3"},
 		{"jobs", "List or retry derived-asset jobs", "M4"},

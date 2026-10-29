@@ -113,6 +113,7 @@ func TestValidate(t *testing.T) {
 		{"cors localhost http ok", "publicCorsOrigins: [http://localhost:5173]\n", ""},
 		{"relative cache dir", "cacheDir: cache\n", "cacheDir"},
 		{"low port", "serve: {port: 80}\n", "serve.port"},
+		{"tiny ingest cap", "maxIngestBytes: 10\n", "maxIngestBytes"},
 		{"high port", "serve: {port: 70000}\n", "serve.port"},
 	}
 	for _, tt := range tests {

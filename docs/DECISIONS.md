@@ -30,10 +30,19 @@ rewrite old ones. Full context: [plans/M0-M1.md](plans/M0-M1.md).
 | D23 | 2026-10-28 | Go view types are deferred to M5 (go-jsonschema resolves nested relative `$ref`s from the wrong directory). Go validates views by schema meanwhile. |
 | D24 | 2026-10-28 | The art-portfolio view puts `section` on each entry instead of separate `sections.primary[]` / `sections.collections[]` lists, so the envelope's single `entries[]` holds everything. |
 | D25 | 2026-10-28 | The public projection (M5) must also drop non-public ids from public collections' `members`; otherwise the public manifest points at drafts. Found by the public fixture. |
+| D26 | 2026-10-28 | M2 E1: HEIC is accepted. The sanitized HEIC is the source blob; M4 makes WebP derivatives with `heif-dec` (libheif, added to bootstrap and doctor). |
+| D27 | 2026-10-28 | M2 E2: ingest stages the untouched original locally (`<cache>/originals/`); apply uploads it to the archive with an `archive-original` op, first in the plan. Replaces D14's "ingest uploads". |
+| D28 | 2026-10-28 | M2 E3: `assetRef.original` records the SHA-256 of the original bytes. The public projection drops it and the public schema forbids it. |
+| D29 | 2026-10-28 | M2 E4: a dropped image becomes `photo` if the original names a camera (Make/Model), otherwise `artwork`; video → `video`, audio → `track`, PDF → `writing`. Overridable. |
+| D30 | 2026-10-28 | M2 E5: a draft's date is prefilled from the original's capture time (day precision), for review before publishing. |
+| D31 | 2026-10-28 | TIFF needs explicit deletes: `exiftool -all=` leaves IFD0 Artist, ImageDescription, Make, Model and Software in TIFFs (there IFD0 is the image's own directory). The sanitizer deletes those IFD0 tags by name; the fail-closed verify caught it. |
+| D32 | 2026-10-28 | PNGs are sanitized in Go with a chunk allowlist, not exiftool (which leaves unreadable zTXt raw profiles, GPS included). Orientation stored in a PNG eXIf chunk is dropped with it; browsers rarely honor it anyway. |
+| D33 | 2026-10-28 | Local API 1.1.0 (additive): IngestBatch files gain `note` (why nothing changed), and OpType gains `archive-original` (D27). |
+| D34 | 2026-10-28 | M3 archives every staged original in `<cache>/originals/`, not only the ones a manifest asset references: two originals that differ only in metadata (say, GPS) sanitize to one blob, and both should reach the archive. |
 
-## Open for sign-off (M1 schemas)
+## M1 schema calls (approved 2026-10-28)
 
-The plan and design doc don't pin these down; each is a guess to confirm or change before the schemas freeze.
+The plan and design doc didn't pin these down. Approved as written ("yes to all", 2026-10-28); changing them now is a versioned change (`schemaVersion` / `viewVersion`).
 
 - `status` is a free slug for now (e.g. `operational`); make it an enum once the content.ts import shows every value.
 - Asset roles: `thumbnail`, `screenshot`, `demo`, `original`, `cover`, `audio`, `video`, `document`.

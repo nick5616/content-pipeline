@@ -15,6 +15,14 @@
       "codes": []
     },
     {
+      "file": "invalid/bad-original-ref.json",
+      "schema": "manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
       "file": "invalid/bad-blob-ref.json",
       "schema": "manifest",
       "schemaValid": false,
@@ -385,6 +393,14 @@
     },
     {
       "file": "public/with-private.json",
+      "schema": "public-manifest",
+      "schemaValid": false,
+      "codes": [
+        "schema"
+      ]
+    },
+    {
+      "file": "public/with-original.json",
       "schema": "public-manifest",
       "schemaValid": false,
       "codes": [

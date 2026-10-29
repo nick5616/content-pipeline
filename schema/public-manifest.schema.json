@@ -3,16 +3,36 @@
   "title": "PublicManifest",
   "description": "The public projection written to the public bucket: only public items, and no private fields anywhere.",
   "type": "object",
-  "allOf": [{ "$ref": "manifest.schema.json" }],
+  "allOf": [
+    {
+      "$ref": "manifest.schema.json"
+    }
+  ],
   "properties": {
     "items": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "visibility": { "const": "public" }
+          "visibility": {
+            "const": "public"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "not": {
+                "required": [
+                  "original"
+                ]
+              }
+            }
+          }
         },
-        "not": { "required": ["private"] }
+        "not": {
+          "required": [
+            "private"
+          ]
+        }
       }
     }
   }

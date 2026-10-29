@@ -45,6 +45,10 @@ type AssetRef struct {
 	// Blob corresponds to the JSON schema field "blob".
 	Blob BlobRef `json:"blob"`
 
+	// SHA-256 of the untouched original the blob was sanitized from (D28). Private:
+	// the public projection drops it.
+	Original *BlobRef `json:"original,omitempty,omitzero"`
+
 	// Role corresponds to the JSON schema field "role".
 	Role AssetRole `json:"role"`
 

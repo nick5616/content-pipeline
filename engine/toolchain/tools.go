@@ -21,8 +21,9 @@ type Tool struct {
 	Version string `json:"version"`
 }
 
-// Required are the tools ingest and jobs need.
-var Required = []string{"ffmpeg", "ffprobe", "exiftool", "qpdf"}
+// Required are the tools ingest and jobs need. heif-dec (libheif) decodes
+// HEIC for derivatives (D26), since ffmpeg 6.1 can't.
+var Required = []string{"ffmpeg", "ffprobe", "exiftool", "qpdf", "heif-dec"}
 
 // ErrWindowsBinary means the tool resolved to a Windows install under /mnt/.
 // WSL appends the Windows PATH, and those binaries see different files,
@@ -39,6 +40,7 @@ var specs = map[string]spec{
 	"ffprobe":  {[]string{"-version"}, regexp.MustCompile(`(?m)^ffprobe version (\S+)`)},
 	"exiftool": {[]string{"-ver"}, regexp.MustCompile(`^\s*(\d+\.\d+)\s*$`)},
 	"qpdf":     {[]string{"--version"}, regexp.MustCompile(`(?m)^qpdf version (\S+)`)},
+	"heif-dec": {[]string{"--version"}, regexp.MustCompile(`(?m)^(?:heif-dec\s+(?:version\s+)?)?v?(\d+\.\d+\.\d+)\b`)},
 }
 
 // ParseVersion extracts the version from a tool's version output.

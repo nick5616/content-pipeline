@@ -159,6 +159,7 @@
         {
           "alt": "Lanterns over a crowded street",
           "blob": "sha256:e5c0216b9168700aa60c15142b285c52b1575f1f0a583655425c370384904edd",
+          "original": "sha256:e99c2ec7c4ae346c7f9dca1b538cad0c8778f8ac8ac7a6f1dbe4a6e2a4fc0fc1",
           "role": "original"
         }
       ],
@@ -288,6 +289,7 @@
       "assets": [
         {
           "blob": "sha256:00f3af975ce2a6bec384c88533857707d12a87ac81a026b60c9189a16c82be8e",
+          "original": "sha256:90bf9a42c8398a78f0a27b59ce55809efe4fb678547e1289d272df16ff5260f0",
           "role": "audio"
         }
       ],
@@ -328,6 +330,7 @@
       "assets": [
         {
           "blob": "sha256:b04216546057e8659fecdec71043ffe7e3220178fa3df37650d6fdbb631dcda8",
+          "original": "sha256:3a88f78ffdd4253db21c7c442bcbc15e0d0ed3402d069eb15178615916ced7dc",
           "role": "original"
         }
       ],

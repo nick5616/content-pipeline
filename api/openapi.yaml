@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: Canon local API
-  version: 1.0.0
+  version: 1.1.0
   description: |
     The API behind `canon serve`, on 127.0.0.1 only. Every request needs
     `Authorization: Bearer <token>`, where the token is the one `canon serve`
@@ -668,14 +668,15 @@ components:
                   - $ref: "../schema/common.schema.json#/$defs/ulid"
                   - type: "null"
               error: { type: [string, "null"], description: Set when stage is failed; verify failures name the surviving tags. }
-            required: [name, size, detectedType, stage, blob, item, error]
+              note: { type: [string, "null"], description: "Why nothing changed, e.g. \"already ingested as rpg-quests\"." }
+            required: [name, size, detectedType, stage, blob, item, error, note]
             additionalProperties: false
       required: [id, files]
       additionalProperties: false
 
     OpType:
       type: string
-      enum: [upload-blob, run-job, publish-copy, unpublish, write-manifest, write-public-manifest, write-view, orphan]
+      enum: [archive-original, upload-blob, run-job, publish-copy, unpublish, write-manifest, write-public-manifest, write-view, orphan]
 
     Plan:
       type: object

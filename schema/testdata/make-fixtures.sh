@@ -31,6 +31,7 @@ valid valid/full.json manifest "$W"
 valid valid/empty.json manifest ""
 
 # Schema rules: caught by the JSON Schema, so Go and Zod must agree.
+case_ invalid/bad-original-ref.json manifest false schema '.items[2].assets[0].original = "md5:abc"'
 case_ invalid/bad-blob-ref.json manifest false schema '.items[2].assets[0].blob = "sha256:abc"'
 case_ invalid/bad-date-format.json manifest false schema '.items[0].date.value = "June 2025"'
 case_ invalid/copy-field-not-allowed.json manifest false schema '.items[0].copy["holodeck-showroom"].tech = ["react"]'
@@ -80,9 +81,11 @@ case_ invalid/bad-experience-date.json manifest true "bad-date $W" '.profile.exp
 # Members that aren't public are dropped too, or public collections would point at drafts.
 PROJECT='[.items[] | select(.visibility == "public") | .id] as $pub
   | .items |= map(select(.visibility == "public") | del(.private)
-      | if .members then .members |= map(select(. as $m | $pub | index($m))) else . end)'
+      | if .members then .members |= map(select(. as $m | $pub | index($m))) else . end
+      | if .assets then .assets |= map(del(.original)) else . end)'
 case_ public/valid.json public-manifest true "$W" "$PROJECT"
 case_ public/with-private.json public-manifest false schema "$PROJECT | .items[0].private = {\"notes\": \"leak\"}"
+case_ public/with-original.json public-manifest false schema "$PROJECT | .items[2].assets[0].original = \"sha256:$(printf '%064d' 0)\""
 case_ public/with-draft.json public-manifest false schema "$PROJECT | .items[0].visibility = \"draft\""
 
 printf '%s\n' "${EXP[@]}" | jq -s --indent 2 '{cases: .}' >expectations.json

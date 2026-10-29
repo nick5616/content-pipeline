@@ -1,2 +1,5 @@
 Brew and static-build samples (*-brew.txt, ffmpeg-git-static.txt) are hand-written in
-the exact format those builds print. *-ubuntu.txt are recorded from WSL Ubuntu 24.04.
+the exact format those builds print. *-ubuntu.txt are recorded from WSL Ubuntu 24.04,
+except heif-dec-1.17-ubuntu.txt, written by hand until libheif-examples is installed:
+record it with `heif-dec --version > heif-dec-1.17-ubuntu.txt` and adjust the parser
+if the test then fails.

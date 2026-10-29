@@ -12,12 +12,30 @@ import (
 	"strings"
 
 	"github.com/nick5616/canon/engine/config"
+	"github.com/nick5616/canon/engine/ingest"
 )
+
+// Option adds an engine service to the server.
+type Option func(*deps)
+
+type deps struct {
+	ingester *ingest.Ingester
+}
+
+// WithIngester enables POST /api/ingest.
+func WithIngester(in *ingest.Ingester) Option { return func(d *deps) { d.ingester = in } }
 
 // NewServer returns the full handler: guard, API routes and the embedded UI.
 // ui is the built UI (ui.Dist rooted at dist); it may hold only .gitkeep.
-func NewServer(cfg config.Config, token string, ui fs.FS) http.Handler {
+func NewServer(cfg config.Config, token string, ui fs.FS, opts ...Option) http.Handler {
+	var d deps
+	for _, o := range opts {
+		o(&d)
+	}
+	ing := newIngestAPI(d.ingester)
 	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/ingest", ing.start)
+	mux.HandleFunc("GET /api/ingest/{id}", ing.get)
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})

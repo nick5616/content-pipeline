@@ -446,10 +446,12 @@ export interface components {
                 item: components["schemas"]["ulid"] | null;
                 /** @description Set when stage is failed; verify failures name the surviving tags. */
                 error: string | null;
+                /** @description Why nothing changed, e.g. "already ingested as rpg-quests". */
+                note: string | null;
             }[];
         };
         /** @enum {string} */
-        OpType: "upload-blob" | "run-job" | "publish-copy" | "unpublish" | "write-manifest" | "write-public-manifest" | "write-view" | "orphan";
+        OpType: "archive-original" | "upload-blob" | "run-job" | "publish-copy" | "unpublish" | "write-manifest" | "write-public-manifest" | "write-view" | "orphan";
         Plan: {
             id: components["schemas"]["ulid"];
             /** @description Remote manifest generation the plan was computed against. */
@@ -609,6 +611,8 @@ export interface components {
             role: components["schemas"]["assetRole"];
             viewport?: components["schemas"]["slug"];
             blob: components["schemas"]["blobRef"];
+            /** @description SHA-256 of the untouched original the blob was sanitized from (D28). Private: the public projection drops it. */
+            original?: components["schemas"]["blobRef"];
             alt?: string;
         };
         /** @description A markdown blob, or a key a site maps to its own component. */
