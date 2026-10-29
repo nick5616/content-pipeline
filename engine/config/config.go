@@ -159,9 +159,13 @@ var (
 	saRe     = regexp.MustCompile(`^[a-z][a-z0-9-]{4,28}[a-z0-9]@[a-z][a-z0-9-]{4,28}[a-z0-9]\.iam\.gserviceaccount\.com$`)
 )
 
-// reservedBuckets are the import sources. Canon reads them and never writes
-// to them (D7), so none may be configured as a Canon bucket.
-var reservedBuckets = map[string]bool{"artandmedia": true, "artandmedia-originals": true}
+// reservedBuckets are the import sources and their private copies. Canon
+// reads them and never writes to them (D7, D42), so none may be configured as
+// a Canon bucket.
+var reservedBuckets = map[string]bool{
+	"artandmedia": true, "artandmedia-originals": true,
+	"artandmedia-copy": true, "artandmedia-originals-copy": true,
+}
 
 // Validate reports every problem with c. Unset buckets and project are not
 // problems: doctor skips bucket checks until they are set.

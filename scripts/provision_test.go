@@ -148,6 +148,7 @@ func TestRefusesBeforeAnyCall(t *testing.T) {
 		"nothing set":      nil,
 		"no operator":      slices.Delete(slices.Clone(flags), 12, 14),
 		"import source":    append(slices.Clone(flags), "--public-bucket", "artandmedia"),
+		"import copy":      append(slices.Clone(flags), "--private-bucket", "artandmedia-copy"),
 		"same bucket":      append(slices.Clone(flags), "--archive-bucket", "canon-priv"),
 		"sa other project": append(slices.Clone(flags), "--service-account", "canon-apply@other-proj.iam.gserviceaccount.com"),
 		"unknown flag":     append(slices.Clone(flags), "--yolo"),

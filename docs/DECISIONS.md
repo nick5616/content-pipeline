@@ -46,6 +46,7 @@ rewrite old ones. Full context: [plans/M0-M1.md](plans/M0-M1.md).
 | D39 | 2026-10-28 | M3 F4: local API 1.2.0 (additive): `GET /api/plans/{id}/apply`, `Plan.revision`, `summary.archive`, OpType `write-history`, and a 409 on `createPlan` when local and remote both moved. SSE stays with M6. |
 | D40 | 2026-10-28 | `item rm` refuses an item that is public in base (the remote manifest as last pulled or applied); anything else, including a draft that's already uploaded, can be removed. Its blobs then show as orphans until M8's gc. |
 | D41 | 2026-10-28 | `canon apply <plan>` doesn't prompt: the saved plan is the review. History snapshots are named with the time the plan was made, so a plan's paths are fixed before apply runs. |
+| D42 | 2026-10-29 | Real data is worked on through private copies: `gs://artandmedia-copy` and `gs://artandmedia-originals-copy` (project `artandmedia`, US, PAP enforced, versioning on, 30-day soft delete), copied byte-for-byte and checked by name, size, MD5 and CRC32C. Imports read the copies; config and provisioning refuse all four buckets as Canon buckets. |
 
 ## M1 schema calls (approved 2026-10-28)
 

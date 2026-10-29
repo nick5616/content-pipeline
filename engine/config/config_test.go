@@ -100,6 +100,8 @@ func TestValidate(t *testing.T) {
 		{"bad bucket name", "project: my-proj\npublicBucket: Canon.Pub\n", "publicBucket"},
 		{"reserved bucket", "project: my-proj\npublicBucket: artandmedia\n", "publicBucket"},
 		{"reserved originals bucket", "project: my-proj\narchiveBucket: artandmedia-originals\n", "archiveBucket"},
+		{"reserved copy bucket", "project: my-proj\nprivateBucket: artandmedia-copy\n", "privateBucket"},
+		{"reserved originals copy bucket", "project: my-proj\narchiveBucket: artandmedia-originals-copy\n", "archiveBucket"},
 		{"duplicate bucket", "project: my-proj\nprivateBucket: same-b\narchiveBucket: same-b\n", "archiveBucket"},
 		{"bad region", "region: US Central\n", "region"},
 		{"sa not email", "impersonateServiceAccount: canon-apply\n", "impersonateServiceAccount"},

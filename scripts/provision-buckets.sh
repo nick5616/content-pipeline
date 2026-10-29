@@ -12,7 +12,8 @@
 #   --operator user:EMAIL  --cors-origin URL (repeatable; replaces config list)
 #
 # There are no defaults. If anything is unset it exits 2 before calling gcloud.
-# It never touches gs://artandmedia or gs://artandmedia-originals.
+# It never touches gs://artandmedia, gs://artandmedia-originals or their
+# private copies (D42).
 set -euo pipefail
 
 MODE=dry-run
@@ -79,7 +80,7 @@ if ((${#missing[@]})); then
   exit 2
 fi
 for b in "$PRIVATE" "$PUBLIC" "$ARCHIVE"; do
-  case "$b" in artandmedia | artandmedia-originals)
+  case "$b" in artandmedia | artandmedia-originals | artandmedia-copy | artandmedia-originals-copy)
     echo "error: gs://$b is an import source; Canon never writes to it" >&2; exit 2 ;;
   esac
 done
