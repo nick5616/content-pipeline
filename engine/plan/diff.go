@@ -5,7 +5,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/gcs"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/manifest"
 	"github.com/nick5616/canon/engine/store"
 )
@@ -23,6 +25,25 @@ type Desired struct {
 	Blobs map[string]LocalFile
 	// Originals are every kept original in the cache (D34).
 	Originals []LocalFile
+	// Jobs are the derived jobs the manifest needs (M4).
+	Jobs []Job
+}
+
+// Job is one needed job, as the plan sees it.
+type Job struct {
+	Key, Recipe string
+	Item        string // id
+	Slug        string
+	// Local is set when this machine has the job's outputs.
+	Local *LocalJob
+	// State and Error come from the job database when Local is nil.
+	State, Error string
+}
+
+// LocalJob is a finished job in the derived cache.
+type LocalJob struct {
+	Files int
+	Bytes int64
 }
 
 // LocalFile is a file in the local cache.
@@ -113,6 +134,41 @@ func Diff(d Desired, l Listing, utc string) ([]Op, []manifest.Problem) {
 		}
 	}
 
+	// Upload every finished job whose receipt the bucket lacks. A receipt
+	// there means the job is done, whichever machine ran it.
+	want := map[string]bool{}
+	for _, j := range d.Jobs {
+		want[j.Key] = true
+		if _, done := l.Derived[j.Key][derived.ReceiptName]; done {
+			continue
+		}
+		id := j.Item
+		switch {
+		case j.Local != nil:
+			ops = append(ops, Op{Type: RunJob, Path: jobs.DerivedPrefix + j.Key + "/", Bucket: Private, Item: &id,
+				Detail: fmt.Sprintf("%s %s, %d files", j.Recipe, j.Slug, j.Local.Files), Bytes: ptr(j.Local.Bytes)})
+		case j.State == string(jobs.Failed):
+			problem(manifest.Warning, "job-failed", "", "%s on %s failed: %s (canon jobs retry %s)", j.Recipe, j.Slug, j.Error, j.Key)
+		default:
+			problem(manifest.Warning, "job-pending", "", "%s on %s hasn't run on this machine (canon jobs run)", j.Recipe, j.Slug)
+		}
+	}
+	keys := make([]string, 0, len(l.Derived))
+	for k := range l.Derived {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		if want[k] {
+			continue
+		}
+		var n int64
+		for _, o := range l.Derived[k] {
+			n += o.Size
+		}
+		ops = append(ops, Op{Type: Orphan, Path: jobs.DerivedPrefix + k + "/", Bucket: Private, Detail: "job no longer needed", Bytes: ptr(n)})
+	}
+
 	// Report what nothing references. Never deleted here (M8's gc does).
 	for sum, obj := range l.Blobs {
 		if _, ok := blobRefs[sum]; !ok {
@@ -155,7 +211,7 @@ func Diff(d Desired, l Listing, utc string) ([]Op, []manifest.Problem) {
 
 // phase is the execution order (§1 of the M3 plan): everything a manifest
 // points at exists before the manifest does.
-var phase = map[OpType]int{ArchiveOriginal: 0, UploadBlob: 1, WriteManifest: 2, WriteHistory: 3, Orphan: 4}
+var phase = map[OpType]int{ArchiveOriginal: 0, UploadBlob: 1, RunJob: 2, WriteManifest: 3, WriteHistory: 4, Orphan: 5}
 
 func describe(c store.Changes) string {
 	s := fmt.Sprintf("%d added, %d changed, %d removed", len(c.Added), len(c.Changed), len(c.Removed))

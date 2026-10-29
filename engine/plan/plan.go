@@ -19,8 +19,12 @@ import (
 
 	"github.com/nick5616/canon/engine/blobstore"
 	"github.com/nick5616/canon/engine/canonjson"
+	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/ids"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/manifest"
+	"github.com/nick5616/canon/engine/media"
+	"github.com/nick5616/canon/engine/recipes"
 	"github.com/nick5616/canon/engine/store"
 )
 
@@ -30,6 +34,7 @@ type OpType string
 const (
 	ArchiveOriginal OpType = "archive-original"
 	UploadBlob      OpType = "upload-blob"
+	RunJob          OpType = "run-job" // upload a finished job's outputs (D50)
 	WriteManifest   OpType = "write-manifest"
 	WriteHistory    OpType = "write-history"
 	Orphan          OpType = "orphan" // reported, never executed
@@ -57,7 +62,7 @@ type Op struct {
 // Writes reports whether the op changes anything.
 func (o Op) Writes() bool { return o.Type != Orphan }
 
-// Summary counts ops by kind. jobs, publish and unpublish stay 0 until M4/M5.
+// Summary counts ops by kind. publish and unpublish stay 0 until M5.
 type Summary struct {
 	Archive   int `json:"archive"`
 	Upload    int `json:"upload"`
@@ -98,6 +103,12 @@ type Env struct {
 	ArchiveBucket string
 	Now           func() time.Time
 	IDs           *ids.Generator // nil: ids.New
+	// Derived is the local job output cache; nil plans no jobs.
+	Derived *derived.Store
+	// RunJobs runs pending jobs before planning (D45); nil skips that.
+	RunJobs func(ctx context.Context) error
+	// JobState reports a job's local state, for the plan's warnings.
+	JobState func(key string) (state, lastError string)
 }
 
 // Current returns the working manifest's bytes as apply would write them:
@@ -128,6 +139,11 @@ func Make(ctx context.Context, env Env) (*Plan, error) {
 	if _, err := env.Working.Fresh(ctx, env.Remote); err != nil {
 		return nil, err
 	}
+	if env.RunJobs != nil {
+		if err := env.RunJobs(ctx); err != nil {
+			return nil, fmt.Errorf("running jobs: %w", err)
+		}
+	}
 	b, m, ps, err := Current(env.Working)
 	if err != nil {
 		return nil, err
@@ -150,6 +166,9 @@ func Make(ctx context.Context, env Env) (*Plan, error) {
 	l, err := List(ctx, env.Remote.API, env.Remote.Bucket, env.ArchiveBucket)
 	if err != nil {
 		return nil, err
+	}
+	if env.Derived != nil {
+		d.Jobs = GatherJobs(m, env.Blobs, env.Derived, l, env.JobState)
 	}
 
 	now := time.Now
@@ -182,6 +201,8 @@ func Make(ctx context.Context, env Env) (*Plan, error) {
 			p.Summary.Archive++
 		case UploadBlob:
 			p.Summary.Upload++
+		case RunJob:
+			p.Summary.Jobs++
 		case Orphan:
 			p.Summary.Orphaned++
 		}
@@ -219,6 +240,37 @@ func Gather(b []byte, m *manifest.Manifest, changes store.Changes, blobs *blobst
 		d.Originals = append(d.Originals, LocalFile{SHA256: o.SHA256(), Ext: o.Ext(), Size: fi.Size()})
 	}
 	return d, nil
+}
+
+// GatherJobs lists the jobs the manifest needs. A blob's type comes from
+// the local cache, or from its object name when only the bucket has it.
+func GatherJobs(m *manifest.Manifest, blobs *blobstore.Store, der *derived.Store, l Listing, state func(string) (string, string)) []Job {
+	typeOf := func(sum string) (media.Type, bool) {
+		if b, ok := blobs.Blob(sum); ok {
+			return jobs.ByExt(b.Ext())
+		}
+		if o, ok := l.Blobs[sum]; ok {
+			if _, _, ext, ok := ParseCAS(o.Name); ok {
+				return jobs.ByExt(ext)
+			}
+		}
+		return media.Type{}, false
+	}
+	var out []Job
+	for _, s := range jobs.Desired(m, recipes.All(), typeOf) {
+		j := Job{Key: s.Key, Recipe: s.Recipe.ID(), Item: string(s.Item), Slug: s.Slug}
+		if dn, ok := der.Lookup(s.Key); ok {
+			lj := &LocalJob{Files: len(dn.Receipt().Files) + 1, Bytes: int64(len(dn.ReceiptBytes()))}
+			for _, f := range dn.Receipt().Files {
+				lj.Bytes += f.Size
+			}
+			j.Local = lj
+		} else if state != nil {
+			j.State, j.Error = state(s.Key)
+		}
+		out = append(out, j)
+	}
+	return out
 }
 
 // Plans are kept in <state>/plans/<id>.json.
@@ -279,8 +331,8 @@ func Render(w io.Writer, p *Plan) error {
 	if p.Empty() {
 		fmt.Fprintf(w, "No changes. The buckets match the working manifest (generation %d).\n", p.Generation)
 	} else {
-		fmt.Fprintf(w, "Plan %s: %d to archive, %d to upload, %d orphaned (against generation %d)\n",
-			p.ID, p.Summary.Archive, p.Summary.Upload, p.Summary.Orphaned, p.Generation)
+		fmt.Fprintf(w, "Plan %s: %d to archive, %d to upload, %d jobs, %d orphaned (against generation %d)\n",
+			p.ID, p.Summary.Archive, p.Summary.Upload, p.Summary.Jobs, p.Summary.Orphaned, p.Generation)
 	}
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	for _, o := range p.Ops {
@@ -313,6 +365,7 @@ func Render(w io.Writer, p *Plan) error {
 var opLabel = map[OpType][2]string{
 	ArchiveOriginal: {"+", "archive"},
 	UploadBlob:      {"+", "upload"},
+	RunJob:          {"+", "job"},
 	WriteManifest:   {"~", "manifest"},
 	WriteHistory:    {"+", "history"},
 	Orphan:          {"?", "orphan"},
@@ -320,6 +373,9 @@ var opLabel = map[OpType][2]string{
 
 // short abbreviates the hash in a content-addressed path.
 func short(p string) string {
+	if key, ok := strings.CutPrefix(p, jobs.DerivedPrefix); ok && len(key) == 65 {
+		return jobs.DerivedPrefix + key[:12] + "…/"
+	}
 	if kind, sum, ext, ok := ParseCAS(p); ok {
 		return fmt.Sprintf("%s/sha256/%s/%s/%s….%s", kind, sum[0:2], sum[2:4], sum[:12], ext)
 	}

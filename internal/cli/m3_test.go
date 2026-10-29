@@ -64,16 +64,37 @@ func TestIngestPlanApplyPlan(t *testing.T) {
 	if !strings.Contains(out, "local edits") {
 		t.Fatalf("status: %s", out)
 	}
+	// Plan runs the jobs first (D45): thumb, lqip and palette on each image.
 	out = ok("plan")
-	if !strings.Contains(out, "2 to archive, 2 to upload") {
+	if !strings.Contains(out, "Jobs: 6 ran") || !strings.Contains(out, "facts filled on 2 items") ||
+		!strings.Contains(out, "2 to archive, 2 to upload, 6 jobs") {
 		t.Fatalf("plan: %s", out)
 	}
 	id := planID.FindStringSubmatch(out)[1]
 	ok("plan", "show", id)
 
 	out = ok("apply", id)
-	if !strings.Contains(out, "[6/6]") || !strings.Contains(out, "now generation") {
+	if !strings.Contains(out, "[12/12]") || !strings.Contains(out, "now generation") {
 		t.Fatalf("apply: %s", out)
+	}
+	// Each job's files and its receipt, receipt last per job.
+	var receipts, files int
+	for _, n := range mem.Names(testenv.Private) {
+		switch {
+		case strings.HasPrefix(n, "derived/") && strings.HasSuffix(n, "/job.json"):
+			receipts++
+		case strings.HasPrefix(n, "derived/"):
+			files++
+		}
+	}
+	// thumb: 1 size, lqip: 1, palette: facts only.
+	if receipts != 6 || files != 4 {
+		t.Fatalf("derived: %d receipts, %d files", receipts, files)
+	}
+	for _, slug := range []string{"png", "jpeg"} {
+		if show := ok("show", slug); !strings.Contains(show, `"palette"`) {
+			t.Errorf("%s has no palette:\n%s", slug, show)
+		}
 	}
 	out = ok("plan")
 	if !strings.HasPrefix(out, "No changes.") {

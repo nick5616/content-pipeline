@@ -11,7 +11,6 @@ import (
 func stubs() []*cobra.Command {
 	var out []*cobra.Command
 	for _, s := range []struct{ use, short, milestone string }{
-		{"jobs", "List or retry derived-asset jobs", "M4"},
 		{"view", "Print a surface's resolved view", "M5"},
 		{"gc", "Delete unreferenced blobs", "M8"},
 		{"rollback", "Restore an earlier manifest", "M8"},

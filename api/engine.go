@@ -13,10 +13,13 @@ import (
 	"github.com/nick5616/canon/engine/apply"
 	"github.com/nick5616/canon/engine/blobstore"
 	"github.com/nick5616/canon/engine/config"
+	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/gcs"
 	"github.com/nick5616/canon/engine/items"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/manifest"
 	"github.com/nick5616/canon/engine/plan"
+	"github.com/nick5616/canon/engine/recipes"
 	"github.com/nick5616/canon/engine/store"
 )
 
@@ -30,6 +33,13 @@ type Engine struct {
 	// edits work) without credentials.
 	GCS func(context.Context) (gcs.API, error)
 	Now func() time.Time
+
+	// Derived and Jobs enable derived jobs (M4); nil Jobs disables them.
+	Derived *derived.Store
+	Jobs    *jobs.DB
+	Tools   recipes.Tools
+	// OnJobs, if set, sees the report of the jobs plan runs first.
+	OnJobs func(jobs.Report)
 }
 
 // WithEngine enables the sync, item, taxonomy and plan endpoints.
@@ -52,14 +62,18 @@ func (e *Engine) remote(ctx context.Context) (store.Remote, error) {
 // PlanEnv is what plan.Make needs.
 func (e *Engine) PlanEnv(ctx context.Context) (plan.Env, error) {
 	r, err := e.remote(ctx)
-	return plan.Env{Working: e.Working, Blobs: e.Blobs, Remote: r, ArchiveBucket: e.Config.ArchiveBucket, Now: e.Now}, err
+	env := plan.Env{Working: e.Working, Blobs: e.Blobs, Remote: r, ArchiveBucket: e.Config.ArchiveBucket, Now: e.Now}
+	if e.Jobs != nil {
+		env.Derived, env.RunJobs, env.JobState = e.Derived, e.runJobsForPlan, e.jobState
+	}
+	return env, err
 }
 
 // Deps is what apply.Apply needs.
 func (e *Engine) Deps(ctx context.Context) (apply.Deps, error) {
 	r, err := e.remote(ctx)
 	return apply.Deps{API: r.API, Private: e.Config.PrivateBucket, Archive: e.Config.ArchiveBucket,
-		Working: e.Working, Blobs: e.Blobs, StateDir: e.StateDir}, err
+		Working: e.Working, Blobs: e.Blobs, Derived: e.Derived, StateDir: e.StateDir}, err
 }
 
 type engineAPI struct {

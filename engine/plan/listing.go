@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/nick5616/canon/engine/gcs"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/store"
 )
 
@@ -20,6 +21,8 @@ type Listing struct {
 	Manifest *gcs.Object // nil when the bucket has no manifest yet
 	// History holds the revisions that have a snapshot in manifest/history/.
 	History map[string]bool
+	// Derived holds derived/<jobkey>/<file> objects, by jobkey then file.
+	Derived map[string]map[string]gcs.Object
 }
 
 const (
@@ -55,9 +58,10 @@ func HistoryPath(utc, revision string) string {
 
 var historyName = regexp.MustCompile(`^manifest/history/[0-9TZ]+-([0-9a-f]{16})\.json$`)
 
-// List reads both buckets: three prefix listings and nothing else.
+// List reads both buckets: four prefix listings and nothing else.
 func List(ctx context.Context, api gcs.API, private, archive string) (Listing, error) {
-	l := Listing{Blobs: map[string]gcs.Object{}, Originals: map[string]gcs.Object{}, History: map[string]bool{}}
+	l := Listing{Blobs: map[string]gcs.Object{}, Originals: map[string]gcs.Object{}, History: map[string]bool{},
+		Derived: map[string]map[string]gcs.Object{}}
 	blobs, err := api.List(ctx, private, "blobs/")
 	if err != nil {
 		return l, err
@@ -83,6 +87,21 @@ func List(ctx context.Context, api gcs.API, private, archive string) (Listing, e
 				l.History[m[1]] = true
 			}
 		}
+	}
+	der, err := api.List(ctx, private, jobs.DerivedPrefix)
+	if err != nil {
+		return l, err
+	}
+	for _, o := range der {
+		key, file, ok := jobs.SplitDerived(o.Name)
+		if !ok {
+			l.Strays = append(l.Strays, o)
+			continue
+		}
+		if l.Derived[key] == nil {
+			l.Derived[key] = map[string]gcs.Object{}
+		}
+		l.Derived[key][file] = o
 	}
 	origs, err := api.List(ctx, archive, "originals/")
 	if err != nil {

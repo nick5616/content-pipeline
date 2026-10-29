@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nick5616/canon/engine/apply"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/plan"
 	"github.com/nick5616/canon/engine/store"
 )
@@ -15,6 +16,7 @@ func newPlan() *cobra.Command {
 	var (
 		out    string
 		asJSON bool
+		noJobs bool
 	)
 	cmd := &cobra.Command{
 		Use:   "plan",
@@ -23,7 +25,11 @@ func newPlan() *cobra.Command {
 private and archive buckets (listings only, no downloads), and saves the
 result as a plan. Nothing in the cloud changes until you run canon apply
 with the plan's id. If the remote manifest moved and you have no local
-edits, plan pulls it first.`,
+edits, plan pulls it first.
+
+First it runs any derived jobs that haven't run (thumbnails, palettes,
+previews, beat grids...), locally; --no-jobs skips that, and the plan
+then warns about jobs it can't upload yet.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			e, err := engineFor(cmd)
@@ -33,6 +39,11 @@ edits, plan pulls it first.`,
 			env, err := e.PlanEnv(cmd.Context())
 			if err != nil {
 				return err
+			}
+			if noJobs {
+				env.RunJobs = nil
+			} else {
+				e.OnJobs = func(r jobs.Report) { printJobReport(cmd.ErrOrStderr(), r) }
 			}
 			p, err := plan.Make(cmd.Context(), env)
 			var inv *store.InvalidError
@@ -68,6 +79,7 @@ edits, plan pulls it first.`,
 	}
 	cmd.Flags().StringVarP(&out, "out", "o", "", "also write the plan to this file")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print the plan as JSON")
+	cmd.Flags().BoolVar(&noJobs, "no-jobs", false, "don't run pending jobs first")
 	cmd.AddCommand(&cobra.Command{
 		Use:   "show <id|file>",
 		Short: "Print a saved plan",

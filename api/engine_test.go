@@ -25,6 +25,7 @@ type engineHarness struct {
 	v   validator.Validator
 	env *testenv.Env
 	mem *gcs.Mem
+	e   *Engine
 }
 
 func newEngineHarness(t *testing.T, fixtures ...string) *engineHarness {
@@ -40,7 +41,7 @@ func newEngineHarness(t *testing.T, fixtures ...string) *engineHarness {
 	if len(errs) > 0 {
 		t.Fatal(errs)
 	}
-	return &engineHarness{t: t, h: NewServer(cfg, token, builtUI, WithEngine(e)), v: v, env: env, mem: mem}
+	return &engineHarness{t: t, h: NewServer(cfg, token, builtUI, WithEngine(e)), v: v, env: env, mem: mem, e: e}
 }
 
 // call sends a request, validates the request (when it's meant to be valid)

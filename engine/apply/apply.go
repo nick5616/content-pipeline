@@ -15,10 +15,13 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/nick5616/canon/engine/blobstore"
+	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/gcs"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/media"
 	"github.com/nick5616/canon/engine/plan"
 	"github.com/nick5616/canon/engine/store"
@@ -31,6 +34,7 @@ type Deps struct {
 	Archive string
 	Working *store.Working
 	Blobs   *blobstore.Store
+	Derived *derived.Store
 	// StateDir holds apply.lock.
 	StateDir string
 }
@@ -130,6 +134,18 @@ func Apply(ctx context.Context, p *plan.Plan, d Deps, progress func(Status)) (St
 			if err := priv.blob(ctx, bl); err != nil {
 				return fail(err)
 			}
+		case plan.RunJob:
+			key := strings.TrimSuffix(strings.TrimPrefix(op.Path, jobs.DerivedPrefix), "/")
+			if d.Derived == nil {
+				return fail(fmt.Errorf("apply: no derived cache for job %s", key))
+			}
+			dn, ok := d.Derived.Lookup(key)
+			if !ok {
+				return fail(fmt.Errorf("apply: job %s is no longer in the local cache; run `canon plan` again", key))
+			}
+			if err := priv.job(ctx, key, dn); err != nil {
+				return fail(err)
+			}
 		case plan.WriteManifest:
 			obj, err := priv.manifest(ctx, b, p.Generation)
 			if errors.Is(err, gcs.ErrPrecondition) {
@@ -182,6 +198,18 @@ func (w privateWriter) blob(ctx context.Context, b blobstore.Blob) error {
 	// A blob whose checksum metadata is wrong is replaced (D38); versioning
 	// keeps the old object.
 	return putFile(ctx, w.api, w.bucket, plan.BlobPath(b.SHA256(), b.Ext()), b.Path(), b.SHA256(), contentType(b.Ext()), true)
+}
+
+// job uploads a job's outputs, then its receipt: a receipt in the bucket
+// means every file it lists is there. Files with the wrong checksum (a
+// partial run elsewhere) are replaced; versioning keeps the old ones.
+func (w privateWriter) job(ctx context.Context, key string, d derived.Done) error {
+	for _, f := range d.Receipt().Files {
+		if err := putFile(ctx, w.api, w.bucket, jobs.FilePath(key, f.Name), d.Path(f.Name), f.SHA256, f.Type, true); err != nil {
+			return err
+		}
+	}
+	return putFile(ctx, w.api, w.bucket, jobs.ReceiptPath(key), d.Path(derived.ReceiptName), d.ReceiptSHA256(), "application/json", true)
 }
 
 func (w privateWriter) manifest(ctx context.Context, b []byte, gen int64) (gcs.Object, error) {

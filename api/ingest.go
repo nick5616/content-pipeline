@@ -23,6 +23,8 @@ type batch struct {
 
 type ingestAPI struct {
 	in *ingest.Ingester
+	// after runs once a batch is processed (derived jobs, D45).
+	after func()
 
 	mu      sync.Mutex
 	batches map[string]*batch
@@ -103,6 +105,9 @@ func (a *ingestAPI) start(w http.ResponseWriter, r *http.Request) {
 				a.set(b, i, fr)
 			})
 			a.set(b, i, res)
+		}
+		if a.after != nil {
+			a.after()
 		}
 	}()
 

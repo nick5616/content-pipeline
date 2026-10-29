@@ -5,6 +5,7 @@ package testenv
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -15,9 +16,13 @@ import (
 
 	"github.com/nick5616/canon/engine/apply"
 	"github.com/nick5616/canon/engine/blobstore"
+	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/gcs"
 	"github.com/nick5616/canon/engine/ingest"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/plan"
+	"github.com/nick5616/canon/engine/recipes"
+	"github.com/nick5616/canon/engine/sanitize"
 	"github.com/nick5616/canon/engine/store"
 	"github.com/nick5616/canon/engine/surfaces"
 	"github.com/nick5616/canon/internal/testmedia"
@@ -42,6 +47,31 @@ type Env struct {
 	Blobs    *blobstore.Store
 	Working  *store.Working
 	Ingester *ingest.Ingester
+	// Derived and Jobs are set by WithJobs.
+	Derived *derived.Store
+	Jobs    *jobs.DB
+}
+
+// WithJobs turns on derived jobs (M4): plans run them first, applies
+// upload them. Jobs run with the real tools.
+func (e *Env) WithJobs() *Env {
+	e.T.Helper()
+	var err error
+	if e.Derived, err = derived.Open(e.CacheDir); err != nil {
+		e.T.Fatal(err)
+	}
+	if e.Jobs, err = jobs.OpenDB(e.StateDir); err != nil {
+		e.T.Fatal(err)
+	}
+	e.T.Cleanup(func() { e.Jobs.Close() })
+	return e
+}
+
+// Runner is the job runner for this env, checking its bucket for receipts.
+func (e *Env) Runner() *jobs.Runner {
+	return &jobs.Runner{DB: e.Jobs, Derived: e.Derived, Blobs: e.Blobs, Working: e.Working,
+		Tools: recipes.NewTools(), Verifier: sanitize.NewVerifier(), StateDir: e.StateDir,
+		Remote: func(ctx context.Context) (map[string]gcs.Object, error) { return jobs.Receipts(ctx, e.API, Private) }}
 }
 
 // New makes an environment on api (a *gcs.Mem, or a real client).
@@ -65,12 +95,23 @@ func (e *Env) Remote() store.Remote { return store.Remote{API: e.API, Bucket: Pr
 
 // PlanEnv is what plan.Make needs.
 func (e *Env) PlanEnv() plan.Env {
-	return plan.Env{Working: e.Working, Blobs: e.Blobs, Remote: e.Remote(), ArchiveBucket: Archive, Now: Clock}
+	env := plan.Env{Working: e.Working, Blobs: e.Blobs, Remote: e.Remote(), ArchiveBucket: Archive, Now: Clock}
+	if e.Jobs != nil {
+		env.Derived = e.Derived
+		env.RunJobs = func(ctx context.Context) error {
+			rep, err := e.Runner().Run(ctx, jobs.Options{})
+			if err == nil && rep.Failed > 0 {
+				err = fmt.Errorf("jobs failed: %v", rep.Errors)
+			}
+			return err
+		}
+	}
+	return env
 }
 
 // Deps is what apply.Apply needs.
 func (e *Env) Deps() apply.Deps {
-	return apply.Deps{API: e.API, Private: Private, Archive: Archive, Working: e.Working, Blobs: e.Blobs, StateDir: e.StateDir}
+	return apply.Deps{API: e.API, Private: Private, Archive: Archive, Working: e.Working, Blobs: e.Blobs, Derived: e.Derived, StateDir: e.StateDir}
 }
 
 // seeds caches ingested state by fixture list: ingest runs real tools and

@@ -23,8 +23,9 @@ type Tool struct {
 
 // Required are the tools ingest and jobs need. heif-dec (libheif) decodes
 // HEIC for derivatives (D26), since ffmpeg 6.1 can't. libheif before 1.18
-// (Ubuntu 24.04 ships 1.17) names it heif-convert; see aliases.
-var Required = []string{"ffmpeg", "ffprobe", "exiftool", "qpdf", "heif-dec"}
+// (Ubuntu 24.04 ships 1.17) names it heif-convert; see aliases. vips
+// (libvips) resizes images into sRGB WebP (D46).
+var Required = []string{"ffmpeg", "ffprobe", "exiftool", "qpdf", "heif-dec", "vips"}
 
 // ErrWindowsBinary means the tool resolved to a Windows install under /mnt/.
 // WSL appends the Windows PATH, and those binaries see different files,
@@ -45,6 +46,7 @@ var specs = map[string]spec{
 	"exiftool": {[]string{"-ver"}, regexp.MustCompile(`^\s*(\d+\.\d+)\s*$`)},
 	"qpdf":     {[]string{"--version"}, regexp.MustCompile(`(?m)^qpdf version (\S+)`)},
 	"heif-dec": {[]string{"--version"}, regexp.MustCompile(`(?m)^(?:heif-(?:dec|convert)\s+(?:version\s+)?)?v?(\d+\.\d+\.\d+)\b`)},
+	"vips":     {[]string{"--version"}, regexp.MustCompile(`(?m)^vips-(\d+\.\d+\.\d+)`)},
 }
 
 // ParseVersion extracts the version from a tool's version output.

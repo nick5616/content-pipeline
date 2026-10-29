@@ -3,6 +3,7 @@ package apply_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -10,7 +11,9 @@ import (
 	"testing"
 
 	"github.com/nick5616/canon/engine/apply"
+	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/gcs"
+	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/manifest"
 	"github.com/nick5616/canon/engine/plan"
 	"github.com/nick5616/canon/engine/store"
@@ -414,5 +417,108 @@ func TestSecondApplyIsBusy(t *testing.T) {
 	close(release)
 	if err := <-done; err != nil {
 		t.Fatal(err)
+	}
+}
+
+// M4: jobs upload after blobs and before the manifest, a job's receipt
+// after all its files, and a failure at any write during a job's upload
+// converges on rerun without rerunning the job.
+func TestJobsFailAtEveryWrite(t *testing.T) {
+	for n := 1; ; n++ {
+		mem := testenv.Mem()
+		e := testenv.Seeded(t, mem, "png.png", "mp3.mp3").WithJobs()
+		p := e.Plan()
+		if p.Summary.Jobs == 0 {
+			t.Fatal("no jobs planned")
+		}
+		total := 0
+		for _, o := range p.Ops {
+			if o.Writes() {
+				total++
+			}
+		}
+		count := 0
+		failed := false
+		mem.Fault = func(c gcs.Call) error {
+			if c.Method == "write" && strings.HasPrefix(c.Name, "derived/") {
+				count++
+				if count == n {
+					failed = true
+					return errors.New("injected 503")
+				}
+			}
+			return nil
+		}
+		_, err := apply.Apply(context.Background(), p, e.Deps(), nil)
+		if !failed {
+			if err != nil {
+				t.Fatalf("n=%d: %v", n, err)
+			}
+			break // n is past the last derived write
+		}
+		if err == nil {
+			t.Fatalf("n=%d: apply should fail", n)
+		}
+		// No receipt is up without every file it lists.
+		assertReceipts(t, mem)
+		mem.Fault = nil
+		ran := 0
+		e.Converge()
+		js, _ := e.Jobs.List("")
+		for _, j := range js {
+			ran += j.Attempts
+		}
+		if ran != p.Summary.Jobs {
+			t.Errorf("n=%d: %d job runs for %d jobs; a failed upload reran jobs", n, ran, p.Summary.Jobs)
+		}
+		assertReceipts(t, mem)
+	}
+}
+
+func assertReceipts(t *testing.T, mem *gcs.Mem) {
+	t.Helper()
+	names := map[string]bool{}
+	for _, n := range mem.Names(testenv.Private) {
+		names[n] = true
+	}
+	for n := range names {
+		if !strings.HasSuffix(n, "/job.json") {
+			continue
+		}
+		b, _, _, _ := mem.Get(testenv.Private, n)
+		var rc derived.Receipt
+		if err := json.Unmarshal(b, &rc); err != nil {
+			t.Fatalf("%s: %v", n, err)
+		}
+		for _, f := range rc.Files {
+			if !names[jobs.FilePath(rc.Jobkey, f.Name)] {
+				t.Errorf("receipt %s is up but %s isn't", n, f.Name)
+			}
+		}
+	}
+}
+
+func TestJobsOrderInApply(t *testing.T) {
+	mem := testenv.Mem()
+	e := testenv.Seeded(t, mem, "png.png").WithJobs()
+	e.Apply(e.Plan())
+	var order []string
+	for _, c := range mem.Calls {
+		if c.Method != "write" {
+			continue
+		}
+		kind := strings.SplitN(c.Name, "/", 2)[0]
+		if strings.HasSuffix(c.Name, "/job.json") {
+			kind = "receipt"
+		}
+		if len(order) == 0 || order[len(order)-1] != kind {
+			order = append(order, kind)
+		}
+	}
+	// derived files and receipts alternate per job, all between blobs and
+	// the manifest.
+	got := strings.Join(order, ",")
+	if !strings.HasPrefix(got, "originals,blobs,derived,receipt") || !strings.HasSuffix(got, "receipt,manifest") {
+		t.Errorf("write order: %s", got)
 	}
 }

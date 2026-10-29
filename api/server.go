@@ -35,10 +35,13 @@ func NewServer(cfg config.Config, token string, ui fs.FS, opts ...Option) http.H
 		o(&d)
 	}
 	ing := newIngestAPI(d.ingester)
+	ja := &jobsAPI{e: d.engine}
+	ing.after = ja.afterIngest
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/ingest", ing.start)
 	mux.HandleFunc("GET /api/ingest/{id}", ing.get)
 	(&engineAPI{e: d.engine, applies: map[string]apply.Status{}}).routes(mux)
+	ja.routes(mux)
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})

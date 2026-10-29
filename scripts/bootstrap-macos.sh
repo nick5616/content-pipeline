@@ -13,7 +13,7 @@ set -euo pipefail
 [[ "$(uname -s)" == Darwin ]] || { echo "this script is for macOS"; exit 1; }
 command -v brew >/dev/null || { echo "install Homebrew first: https://brew.sh"; exit 1; }
 
-FORMULAE=(go go-task fnm ffmpeg exiftool qpdf libheif jq)
+FORMULAE=(go go-task fnm ffmpeg exiftool qpdf libheif vips jq)
 CASKS=(google-cloud-sdk)
 NODE_VERSION=24.22.1
 
@@ -37,7 +37,7 @@ fnm install "$NODE_VERSION"
 fnm default "$NODE_VERSION"
 
 echo "==> summary"
-for t in go node npm task ffmpeg ffprobe exiftool qpdf heif-dec heif-enc jq gcloud docker; do
+for t in go node npm task ffmpeg ffprobe exiftool qpdf heif-dec heif-enc vips jq gcloud docker; do
   printf '  %-9s %s\n' "$t" "$(command -v "$t" || echo MISSING)"
 done
 cat <<'MSG'

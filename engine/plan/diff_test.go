@@ -300,3 +300,59 @@ func TestParseCAS(t *testing.T) {
 		}
 	}
 }
+
+func TestDiffJobs(t *testing.T) {
+	jk := func(c byte) string { return strings.Repeat(string(c), 64) }
+	d := desired()
+	d.Jobs = []Job{
+		{Key: jk('1'), Recipe: "thumb@v1", Item: idA, Slug: "sketch", Local: &LocalJob{Files: 3, Bytes: 900}},
+		{Key: jk('2'), Recipe: "lqip@v1", Item: idA, Slug: "sketch", Local: &LocalJob{Files: 2, Bytes: 90}},
+		{Key: jk('3'), Recipe: "palette@v1", Item: idB, Slug: "study", State: "failed", Error: "vips: no such file"},
+		{Key: jk('4'), Recipe: "thumb@v1", Item: idB, Slug: "study", State: "pending"},
+	}
+	l := everything()
+	// Job 2's receipt is remote (another machine ran it); job 1 has files
+	// but no receipt (a partial upload); job 9 is no longer needed.
+	l.Derived = map[string]map[string]gcs.Object{
+		jk('1'): {"w320.webp": obj("derived/"+jk('1')+"/w320.webp", "x", 5)},
+		jk('2'): {"job.json": obj("derived/"+jk('2')+"/job.json", "y", 6)},
+		jk('9'): {"job.json": obj("derived/"+jk('9')+"/job.json", "z", 7), "a.webp": obj("derived/"+jk('9')+"/a.webp", "w", 8)},
+	}
+	ops, ps := Diff(d, l, "20261029T120000Z")
+	var got []string
+	for _, o := range ops {
+		got = append(got, string(o.Type)+" "+o.Path)
+	}
+	want := []string{"run-job derived/" + jk('1') + "/", "orphan derived/" + jk('9') + "/"}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("ops:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+	if ops[0].Detail != "thumb@v1 sketch, 3 files" || *ops[0].Bytes != 900 || ops[1].Detail != "job no longer needed" || *ops[1].Bytes != 20 {
+		t.Errorf("details: %+v %+v", ops[0], ops[1])
+	}
+	codes := map[string]bool{}
+	for _, p := range ps {
+		codes[p.Code] = true
+		if p.Severity != manifest.Warning {
+			t.Errorf("%s is an error; jobs never block a plan", p.Code)
+		}
+	}
+	if !codes["job-failed"] || !codes["job-pending"] {
+		t.Errorf("problems: %v", ps)
+	}
+}
+
+func TestRunJobsBeforeManifest(t *testing.T) {
+	d := desired()
+	d.Jobs = []Job{{Key: strings.Repeat("1", 64), Recipe: "thumb@v1", Item: idA, Slug: "sketch", Local: &LocalJob{Files: 2, Bytes: 9}}}
+	ops, _ := Diff(d, Listing{Blobs: map[string]gcs.Object{}, Originals: map[string]gcs.Object{}, History: map[string]bool{}}, "20261029T120000Z")
+	var order []string
+	for _, o := range ops {
+		if len(order) == 0 || order[len(order)-1] != string(o.Type) {
+			order = append(order, string(o.Type))
+		}
+	}
+	if strings.Join(order, ",") != "archive-original,upload-blob,run-job,write-manifest,write-history" {
+		t.Errorf("phases: %v", order)
+	}
+}

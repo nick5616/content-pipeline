@@ -36,6 +36,9 @@ type Problem struct {
 }
 
 func (p Problem) String() string {
+	if p.Path == "" {
+		return fmt.Sprintf("%s %s: %s", p.Severity, p.Code, p.Message)
+	}
 	return fmt.Sprintf("%s %s at %s: %s", p.Severity, p.Code, p.Path, p.Message)
 }
 

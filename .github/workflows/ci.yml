@@ -28,8 +28,8 @@ jobs:
       - name: Install media tools (same Ubuntu 24.04 versions as WSL)
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q jq ffmpeg libimage-exiftool-perl qpdf libheif-examples libheif-plugin-libde265 libheif-plugin-x265
-          ffmpeg -version | head -1; exiftool -ver; qpdf --version | head -1
+          sudo apt-get install -y -q jq ffmpeg libimage-exiftool-perl qpdf libheif-examples libheif-plugin-libde265 libheif-plugin-x265 libvips-tools
+          ffmpeg -version | head -1; exiftool -ver; qpdf --version | head -1; vips --version
 
       - name: gofmt
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)

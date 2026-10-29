@@ -321,6 +321,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The latest background run's status */
+        get: operations["getJobRun"];
+        put?: never;
+        /**
+         * Run every job the manifest needs, in the background
+         * @description Failed jobs are retried too. Jobs whose outputs are in the local
+         *     cache, or whose receipt is in the private bucket, don't run again.
+         *     Facts recipes fill only empty facts unless refreshFacts is set (D48).
+         */
+        post: operations["runJobs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/local/blobs/{sha256}": {
         parameters: {
             query?: never;
@@ -504,6 +527,25 @@ export interface components {
             state: components["schemas"]["JobState"];
             attempts: number;
             lastError: string | null;
+        };
+        JobRun: {
+            /** @enum {string} */
+            state: "running" | "done" | "failed";
+            report: components["schemas"]["JobReport"] | null;
+            error: string | null;
+        };
+        JobReport: {
+            ran: number;
+            /** @description Already in the local cache. */
+            cached: number;
+            /** @description Receipt already in the private bucket. */
+            remote: number;
+            failed: number;
+            /** @description Failed before and not retried. */
+            skipped: number;
+            /** @description Items whose facts were filled. */
+            facts: number;
+            errors?: string[];
         };
         Event: {
             /** @enum {string} */
@@ -1719,6 +1761,56 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    getJobRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its state, and the report once it's done. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRun"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    runJobs: {
+        parameters: {
+            query?: {
+                /** @description Only this item (id or slug). */
+                item?: string;
+                /** @description Only this recipe (name). */
+                recipe?: string;
+                refreshFacts?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Started. Poll getJobRun. */
+            202: {
+                headers: {
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRun"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
             409: components["responses"]["Conflict"];
         };
     };

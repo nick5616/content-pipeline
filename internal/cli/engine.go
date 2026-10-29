@@ -10,7 +10,10 @@ import (
 	"github.com/nick5616/canon/api"
 	"github.com/nick5616/canon/engine/blobstore"
 	"github.com/nick5616/canon/engine/config"
+	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/gcs"
+	"github.com/nick5616/canon/engine/jobs"
+	"github.com/nick5616/canon/engine/recipes"
 	"github.com/nick5616/canon/engine/store"
 	"github.com/nick5616/canon/engine/surfaces"
 )
@@ -24,6 +27,9 @@ var newGCS = func(ctx context.Context, cfg config.Config) (gcs.API, error) {
 	return c, nil
 }
 
+// newTools runs recipe tools. Tests replace it.
+var newTools = recipes.NewTools
+
 // newEngine wires the engine from config. The GCS client is made on first
 // use, so commands that only edit locally never need credentials.
 func newEngine(cfg config.Config) (*api.Engine, error) {
@@ -35,12 +41,23 @@ func newEngine(cfg config.Config) (*api.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
+	der, err := derived.Open(cfg.CacheDir)
+	if err != nil {
+		return nil, err
+	}
+	db, err := jobs.OpenDB(cfg.StateDir)
+	if err != nil {
+		return nil, err
+	}
 	var (
 		once   sync.Once
 		client gcs.API
 		cerr   error
 	)
 	return &api.Engine{
+		Derived:  der,
+		Jobs:     db,
+		Tools:    newTools(),
 		Config:   cfg,
 		Working:  store.Open(cfg.StateDir, cfg.ProfileName, reg),
 		Blobs:    blobs,

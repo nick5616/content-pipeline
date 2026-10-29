@@ -21,6 +21,8 @@ func TestParseVersion(t *testing.T) {
 		{"qpdf", "qpdf-12.2-brew.txt", "12.2.0"},
 		{"heif-dec", "heif-dec-1.17-ubuntu.txt", "1.17.6"},
 		{"heif-dec", "heif-dec-1.20-brew.txt", "1.20.2"},
+		{"vips", "vips-8.15-ubuntu.txt", "8.15.1"},
+		{"vips", "vips-8.17-brew.txt", "8.17.2"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.file, func(t *testing.T) {
