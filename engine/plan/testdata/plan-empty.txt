@@ -1,0 +1,2 @@
+No changes. The buckets match the working manifest (generation 42).
+  ? orphan  blobs/sha256/ff/ff/ffffffffffff….gif  (10 B)

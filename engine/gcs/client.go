@@ -21,13 +21,6 @@ import (
 // Scope is the only OAuth scope Canon asks for.
 const Scope = storage.ScopeFullControl
 
-// API is the slice of GCS that callers depend on, so tests can fake it.
-// It grows as later milestones need more.
-type API interface {
-	BucketAttrs(ctx context.Context, bucket string) (*storage.BucketAttrs, error)
-	Close() error
-}
-
 // Client wraps *storage.Client to satisfy API.
 type Client struct{ *storage.Client }
 

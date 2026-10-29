@@ -238,7 +238,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Compute a plan from the working manifest and the remote listing */
+        /**
+         * Compute a plan from the working manifest and the remote listing
+         * @description Pulls first when the remote moved and there are no local edits. Refuses with 409 when both moved (added in 1.2.0).
+         */
         post: operations["createPlan"];
         delete?: never;
         options?: never;
@@ -270,7 +273,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Progress of the plan's apply (added in 1.2.0; poll it like getIngest) */
+        get: operations["getApplyStatus"];
         put?: never;
         /**
          * Execute a saved plan, and nothing else
@@ -451,12 +455,16 @@ export interface components {
             }[];
         };
         /** @enum {string} */
-        OpType: "archive-original" | "upload-blob" | "run-job" | "publish-copy" | "unpublish" | "write-manifest" | "write-public-manifest" | "write-view" | "orphan";
+        OpType: "archive-original" | "upload-blob" | "run-job" | "publish-copy" | "unpublish" | "write-manifest" | "write-history" | "write-public-manifest" | "write-view" | "orphan";
         Plan: {
             id: components["schemas"]["ulid"];
             /** @description Remote manifest generation the plan was computed against. */
             generation: number;
+            /** @description Working manifest revision the plan was computed from (added in 1.2.0). Apply refuses if it changed. */
+            revision: string;
             summary: {
+                /** @description Originals to archive (added in 1.2.0). */
+                archive: number;
                 upload: number;
                 jobs: number;
                 publish: number;
@@ -1587,6 +1595,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["Invalid"];
             503: components["responses"]["Offline"];
         };
@@ -1609,6 +1618,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Plan"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getApplyStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["PlanID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The latest status. Kept until canon serve restarts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyStatus"];
                 };
             };
             401: components["responses"]["Unauthorized"];

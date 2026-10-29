@@ -59,7 +59,7 @@ jobs:
       - name: go test
         run: go test ./...
       - name: Race detector (concurrent ingest, working-manifest lock, API batches)
-        run: CGO_ENABLED=1 go test -race -count=1 ./api/ ./engine/store/ ./engine/ingest/
+        run: CGO_ENABLED=1 go test -race -count=1 ./api/ ./engine/store/ ./engine/ingest/ ./engine/apply/ ./engine/items/
       - name: Integration (fake-gcs-server)
         run: task test:integration
       - name: Codegen drift

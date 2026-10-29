@@ -40,6 +40,12 @@ rewrite old ones. Full context: [plans/M0-M1.md](plans/M0-M1.md).
 | D33 | 2026-10-28 | Local API 1.1.0 (additive): IngestBatch files gain `note` (why nothing changed), and OpType gains `archive-original` (D27). |
 | D34 | 2026-10-28 | M3 archives every staged original in `<cache>/originals/`, not only the ones a manifest asset references: two originals that differ only in metadata (say, GPS) sanitize to one blob, and both should reach the archive. |
 | D35 | 2026-10-28 | The `heif-dec` tool also resolves as `heif-convert`, its name before libheif 1.18 (Ubuntu 24.04 ships 1.17.6). Ubuntu splits HEVC out of `libheif-examples`: `libheif-plugin-libde265` (decode, needed by M4) and `libheif-plugin-x265` (encode, test fixtures only); bootstrap and CI install both. The allowlist gains `Meta:PrimaryItemReference`, the only structural tag a real sanitized HEIC added. |
+| D36 | 2026-10-28 | M3 F1: `ls`, `show`, `item new/set/rm` and `taxonomy ls/set` (CLI and API) land in M3, as thin layers over `store.Update`. |
+| D37 | 2026-10-28 | M3 F2: a plan records the working manifest's revision; apply refuses if it changed. Plans don't embed the manifest. |
+| D38 | 2026-10-28 | M3 F3: a content-addressed object with missing or wrong `sha256` metadata is re-uploaded in the private bucket (versioning keeps the old one) and is a plan error in the archive. |
+| D39 | 2026-10-28 | M3 F4: local API 1.2.0 (additive): `GET /api/plans/{id}/apply`, `Plan.revision`, `summary.archive`, OpType `write-history`, and a 409 on `createPlan` when local and remote both moved. SSE stays with M6. |
+| D40 | 2026-10-28 | `item rm` refuses an item that is public in base (the remote manifest as last pulled or applied); anything else, including a draft that's already uploaded, can be removed. Its blobs then show as orphans until M8's gc. |
+| D41 | 2026-10-28 | `canon apply <plan>` doesn't prompt: the saved plan is the review. History snapshots are named with the time the plan was made, so a plan's paths are fixed before apply runs. |
 
 ## M1 schema calls (approved 2026-10-28)
 

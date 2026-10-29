@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/nick5616/canon/engine/apply"
 	"github.com/nick5616/canon/engine/config"
 	"github.com/nick5616/canon/engine/ingest"
 )
@@ -20,6 +21,7 @@ type Option func(*deps)
 
 type deps struct {
 	ingester *ingest.Ingester
+	engine   *Engine
 }
 
 // WithIngester enables POST /api/ingest.
@@ -36,6 +38,7 @@ func NewServer(cfg config.Config, token string, ui fs.FS, opts ...Option) http.H
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/ingest", ing.start)
 	mux.HandleFunc("GET /api/ingest/{id}", ing.get)
+	(&engineAPI{e: d.engine, applies: map[string]apply.Status{}}).routes(mux)
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -83,7 +86,13 @@ const notBuilt = `<!doctype html>
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
+	writeBody(w, v)
+}
+
+func writeBody(w http.ResponseWriter, v any) {
+	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(v)
 }
 
 // problem writes an RFC 9457 problem document.

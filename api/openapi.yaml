@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: Canon local API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     The API behind `canon serve`, on 127.0.0.1 only. Every request needs
     `Authorization: Bearer <token>`, where the token is the one `canon serve`
@@ -13,8 +13,8 @@ info:
     `If-Match` with the working manifest revision and fail with 412 when it
     moved.
 
-    Frozen at the end of M1. Handlers land in M3 to M6; `GET /api/health`
-    exists from M0.
+    Frozen at the end of M1; changes since are additive only (1.1.0: D33,
+    1.2.0: D39). Handlers land in M3 to M6; `GET /api/health` exists from M0.
 
     Every operation has a CLI twin (`x-cli`), so nothing is UI-only:
 
@@ -29,7 +29,7 @@ info:
     | getTaxonomy, putTaxonomyTerm | `canon taxonomy ls`, `canon taxonomy set` |
     | listSurfaces, previewSurface | `canon view`, `canon view <surface>` |
     | startIngest, getIngest | `canon ingest <paths>` |
-    | createPlan, getPlan, applyPlan | `canon plan -o`, `canon plan show`, `canon apply` |
+    | createPlan, getPlan, applyPlan, getApplyStatus | `canon plan -o`, `canon plan show`, `canon apply` |
     | listJobs, retryJob | `canon jobs`, `canon jobs retry` |
     | getEvents | `--watch` flags (`canon jobs --watch`) |
     | getLocalBlob, getLocalDerived | none: read-only view of the local cache for offline thumbnails |
@@ -343,6 +343,7 @@ paths:
       operationId: createPlan
       x-cli: canon plan
       summary: Compute a plan from the working manifest and the remote listing
+      description: Pulls first when the remote moved and there are no local edits. Refuses with 409 when both moved (added in 1.2.0).
       responses:
         "201":
           description: The saved plan. An empty ops list means nothing to do.
@@ -351,6 +352,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Plan" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Invalid" }
         "503": { $ref: "#/components/responses/Offline" }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -388,6 +390,20 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "503": { $ref: "#/components/responses/Offline" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    get:
+      operationId: getApplyStatus
+      x-cli: canon apply
+      summary: Progress of the plan's apply (added in 1.2.0; poll it like getIngest)
+      parameters:
+        - $ref: "#/components/parameters/PlanID"
+      responses:
+        "200":
+          description: The latest status. Kept until canon serve restarts.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApplyStatus" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   /api/jobs:
@@ -676,22 +692,27 @@ components:
 
     OpType:
       type: string
-      enum: [archive-original, upload-blob, run-job, publish-copy, unpublish, write-manifest, write-public-manifest, write-view, orphan]
+      enum: [archive-original, upload-blob, run-job, publish-copy, unpublish, write-manifest, write-history, write-public-manifest, write-view, orphan]
 
     Plan:
       type: object
       properties:
         id: { $ref: "../schema/common.schema.json#/$defs/ulid" }
         generation: { type: integer, minimum: 0, description: Remote manifest generation the plan was computed against. }
+        revision:
+          type: string
+          pattern: "^[0-9a-f]{16}$"
+          description: Working manifest revision the plan was computed from (added in 1.2.0). Apply refuses if it changed.
         summary:
           type: object
           properties:
+            archive: { type: integer, minimum: 0, description: Originals to archive (added in 1.2.0). }
             upload: { type: integer, minimum: 0 }
             jobs: { type: integer, minimum: 0 }
             publish: { type: integer, minimum: 0 }
             unpublish: { type: integer, minimum: 0 }
             orphaned: { type: integer, minimum: 0 }
-          required: [upload, jobs, publish, unpublish, orphaned]
+          required: [archive, upload, jobs, publish, unpublish, orphaned]
           additionalProperties: false
         ops:
           type: array
@@ -711,7 +732,7 @@ components:
           type: array
           description: Warnings to review (e.g. links off owned domains). A plan with errors is never created.
           items: { $ref: "#/components/schemas/ValidationProblem" }
-      required: [id, generation, summary, ops, problems]
+      required: [id, generation, revision, summary, ops, problems]
       additionalProperties: false
 
     ApplyStatus:

@@ -51,8 +51,21 @@ func TestEveryOperationHasACLITwin(t *testing.T) {
 					t.Errorf("%s: x-cli %q must start with canon <command>", op.ID, op.CLI)
 					continue
 				}
-				cmd, _, err := root.Find(words[1:])
-				if err != nil || cmd == root || cmd.Name() != words[1] {
+				// The command words (before any flag) must name exactly the
+				// command cobra finds: "canon taxonomy set" is taxonomy's set.
+				var path []string
+				for _, w := range words {
+					if strings.HasPrefix(w, "-") {
+						break
+					}
+					path = append(path, w)
+				}
+				// A stub (a later milestone's command) stands in for its
+				// subcommands too.
+				cmd, _, err := root.Find(path[1:])
+				full := strings.Join(path, " ")
+				stub := err == nil && cmd.Annotations["stub"] != "" && strings.HasPrefix(full+" ", cmd.CommandPath()+" ")
+				if err != nil || cmd == root || (cmd.CommandPath() != full && !stub) {
 					t.Errorf("%s: x-cli %q names no canon command", op.ID, op.CLI)
 				}
 			}

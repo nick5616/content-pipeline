@@ -18,8 +18,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/nick5616/canon/engine/sanitize"
@@ -202,4 +205,70 @@ func (s *Store) Lookup(origSum string) (IndexEntry, bool) {
 		return IndexEntry{}, false
 	}
 	return e, true
+}
+
+// Blob is a sanitized file in the cache. Only the store makes one, and only
+// for files under blobs/, which only Put fills; so a Blob is always
+// sanitized bytes. The private-bucket uploader takes nothing else.
+type Blob struct{ sum, ext, path string }
+
+func (b Blob) SHA256() string { return b.sum }
+func (b Blob) Ext() string    { return b.ext }
+func (b Blob) Path() string   { return b.path }
+
+// ArchivedOriginal is an untouched original kept for the archive (D27).
+// The archive writer takes nothing else, and nothing else takes it.
+type ArchivedOriginal struct{ sum, ext, path string }
+
+func (o ArchivedOriginal) SHA256() string { return o.sum }
+func (o ArchivedOriginal) Ext() string    { return o.ext }
+func (o ArchivedOriginal) Path() string   { return o.path }
+
+// find returns the single file named <sum>.<ext> in kind's shard, if any.
+func (s *Store) find(kind, sum string) (ext, path string, ok bool) {
+	if len(sum) != 64 {
+		return "", "", false
+	}
+	matches, _ := filepath.Glob(filepath.Join(s.root, kind, "sha256", sum[0:2], sum[2:4], sum+".*"))
+	for _, m := range matches {
+		e := strings.TrimPrefix(filepath.Ext(m), ".")
+		if e == "" || e == "part" || e == "tmp" {
+			continue
+		}
+		return e, m, true
+	}
+	return "", "", false
+}
+
+// Blob returns the cached blob with this hash, if the cache has it.
+func (s *Store) Blob(sum string) (Blob, bool) {
+	ext, path, ok := s.find("blobs", sum)
+	return Blob{sum, ext, path}, ok
+}
+
+// Original returns the kept original with this hash, if the cache has it.
+func (s *Store) Original(sum string) (ArchivedOriginal, bool) {
+	ext, path, ok := s.find("originals", sum)
+	return ArchivedOriginal{sum, ext, path}, ok
+}
+
+// Originals lists every kept original, sorted by hash (D34: apply archives
+// all of them, referenced or not).
+func (s *Store) Originals() ([]ArchivedOriginal, error) {
+	var out []ArchivedOriginal
+	root := filepath.Join(s.root, "originals", "sha256")
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		name := d.Name()
+		sum, ext, ok := strings.Cut(name, ".")
+		if !ok || len(sum) != 64 || ext == "" || strings.Contains(ext, ".") {
+			return nil // a .part from an interrupted copy
+		}
+		out = append(out, ArchivedOriginal{sum, ext, path})
+		return nil
+	})
+	sort.Slice(out, func(i, j int) bool { return out[i].sum < out[j].sum })
+	return out, err
 }

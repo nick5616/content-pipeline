@@ -51,8 +51,12 @@ func newServe() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			eng, err := newEngine(cfg)
+			if err != nil {
+				return err
+			}
 			srv := &http.Server{
-				Handler:           api.NewServer(cfg, token, ui.Dist, api.WithIngester(in)),
+				Handler:           api.NewServer(cfg, token, ui.Dist, api.WithIngester(in), api.WithEngine(eng)),
 				ReadHeaderTimeout: 10 * time.Second,
 			}
 

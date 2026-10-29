@@ -11,15 +11,6 @@ import (
 func stubs() []*cobra.Command {
 	var out []*cobra.Command
 	for _, s := range []struct{ use, short, milestone string }{
-		{"status", "Show sync status of the working manifest", "M3"},
-		{"pull", "Fetch the remote manifest", "M3"},
-		{"diff", "Show local edits against the remote manifest", "M3"},
-		{"ls", "List items", "M3"},
-		{"show", "Show one item", "M3"},
-		{"item", "Create, edit or remove items", "M3"},
-		{"taxonomy", "Edit categories, tech, mediums and tags", "M3"},
-		{"plan", "Compute what apply would change", "M3"},
-		{"apply", "Apply a saved plan", "M3"},
 		{"jobs", "List or retry derived-asset jobs", "M4"},
 		{"view", "Print a surface's resolved view", "M5"},
 		{"import", "Import content.ts or a bucket", "M7"},
@@ -30,8 +21,9 @@ func stubs() []*cobra.Command {
 			Use:                s.use,
 			Short:              s.short + " (" + s.milestone + ")",
 			DisableFlagParsing: true,
+			Annotations:        map[string]string{"stub": s.milestone},
 			RunE: func(*cobra.Command, []string) error {
-				return fmt.Errorf("%s is not in M0; it lands in %s", s.use, s.milestone)
+				return fmt.Errorf("%s isn't built yet; it lands in %s", s.use, s.milestone)
 			},
 		})
 	}

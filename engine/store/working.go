@@ -1,6 +1,7 @@
-// Package store holds the local working manifest (D6): working.json in the
-// state dir, never the repo. M2 adds the local half (atomic, locked
-// read-modify-write); M3 adds base.json, remote generations and pull.
+// Package store holds the local working manifest (D6): working.json (your
+// edits) and base.json (the remote manifest at the generation they're based
+// on) in the state dir, never the repo. sync.go compares them with the
+// remote and pulls.
 package store
 
 import (
@@ -85,26 +86,32 @@ func (w *Working) Load() (*manifest.Manifest, string, []manifest.Problem, error)
 	return m, Revision(b), ps, nil
 }
 
+// ErrStale means the working manifest changed since the revision the caller
+// based its edit on (If-Match).
+var ErrStale = errors.New("the working manifest changed since you loaded it")
+
 // Update applies fn to the manifest under an exclusive lock and writes the
 // result atomically. If fn fails, or the result has errors, nothing is
 // written. It returns the new revision.
 func (w *Working) Update(fn func(*manifest.Manifest) error) (string, error) {
-	if err := os.MkdirAll(w.dir, 0o700); err != nil {
-		return "", err
-	}
-	lock, err := os.OpenFile(filepath.Join(w.dir, "working.lock"), os.O_CREATE|os.O_RDWR, 0o600)
-	if err != nil {
-		return "", err
-	}
-	defer lock.Close()
-	if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_EX); err != nil {
-		return "", err
-	}
-	defer syscall.Flock(int(lock.Fd()), syscall.LOCK_UN)
+	return w.UpdateIf("", fn)
+}
 
-	m, _, _, err := w.Load()
+// UpdateIf is Update, but fails with ErrStale unless the current revision is
+// rev. An empty rev skips the check.
+func (w *Working) UpdateIf(rev string, fn func(*manifest.Manifest) error) (string, error) {
+	unlock, err := w.lock()
 	if err != nil {
 		return "", err
+	}
+	defer unlock()
+
+	m, cur, _, err := w.Load()
+	if err != nil {
+		return "", err
+	}
+	if rev != "" && rev != cur {
+		return "", ErrStale
 	}
 	if err := fn(m); err != nil {
 		return "", err
@@ -120,6 +127,35 @@ func (w *Working) Update(fn func(*manifest.Manifest) error) (string, error) {
 		return "", err
 	}
 	return Revision(out), nil
+}
+
+// lock takes the state dir's exclusive lock, shared by every writer of
+// working.json and base.json (CLI and canon serve alike).
+func (w *Working) lock() (func(), error) {
+	if err := os.MkdirAll(w.dir, 0o700); err != nil {
+		return nil, err
+	}
+	f, err := os.OpenFile(filepath.Join(w.dir, "working.lock"), os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, err
+	}
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
+		f.Close()
+		return nil, err
+	}
+	return func() {
+		syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		f.Close()
+	}, nil
+}
+
+// Bytes returns working.json exactly as stored, and whether it exists.
+func (w *Working) Bytes() ([]byte, bool, error) {
+	b, err := os.ReadFile(w.path())
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, false, nil
+	}
+	return b, err == nil, err
 }
 
 // writeAtomic writes via a synced temp file and a rename, so a crash leaves

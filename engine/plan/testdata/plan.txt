@@ -1,0 +1,9 @@
+Plan 01JB7Z00000000000000000P1N: 2 to archive, 2 to upload, 1 orphaned (against generation 0)
+  + archive   originals/sha256/cc/cc/cccccccccccc….png                 (sketch, 2.9 KB)
+  + archive   originals/sha256/dd/dd/dddddddddddd….png                 (study, 3.0 KB)
+  + upload    blobs/sha256/aa/aa/aaaaaaaaaaaa….png                     (sketch, 1000 B)
+  + upload    blobs/sha256/bb/bb/bbbbbbbbbbbb….jpg                     (study, 2.0 MB)
+  ~ manifest  manifest/manifest.json                                   2 added, 0 changed, 0 removed (generation none -> next)
+  + history   manifest/history/20261028T120000Z-c65359e618b1cc47.json  (snapshot for rollback)
+  ? orphan    blobs/sha256/ff/ff/ffffffffffff….gif                     (not referenced by the manifest, 10 B)
+  ! warning link-not-owned at /items/0/links/0: example.com is not an owned domain
