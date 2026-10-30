@@ -1,0 +1,62 @@
+{
+  "entries": [
+    {
+      "category": null,
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z00000000000000000005",
+      "key": null,
+      "kind": "collection",
+      "links": [],
+      "mediums": [],
+      "order": 1,
+      "pieces": [
+        {
+          "date": {
+            "display": "Oct 3, 2025",
+            "label": null,
+            "sortKey": 20251003,
+            "value": "2025-10-03"
+          },
+          "description": null,
+          "id": "01JB7Z00000000000000000003",
+          "image": {
+            "alt": "Lanterns over a crowded street",
+            "height": 600,
+            "lqip": "data:image/webp;base64,UklGRmZha2U=",
+            "srcset": [
+              {
+                "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b-thumb/w320.webp",
+                "width": 320
+              },
+              {
+                "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b-thumb/w800.webp",
+                "width": 800
+              }
+            ],
+            "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b-thumb/w800.webp",
+            "width": 800
+          },
+          "slug": "night-market-study",
+          "title": "Night Market Study"
+        }
+      ],
+      "slug": "sketches",
+      "status": null,
+      "summary": "Quick studies.",
+      "tags": [],
+      "tech": [],
+      "title": "Sketches",
+      "why": ""
+    }
+  ],
+  "pipelineVersion": "0.5.0",
+  "taxonomy": {
+    "categories": [],
+    "mediums": [],
+    "tags": [],
+    "tech": []
+  },
+  "view": "holodeck-art-room",
+  "viewVersion": 1
+}

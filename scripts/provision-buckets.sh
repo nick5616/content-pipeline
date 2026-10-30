@@ -189,7 +189,14 @@ bucket() {
 
   local update=()
   [[ $(jq -r '.uniform_bucket_level_access // false' <<<"$state") == true ]] || update+=(--uniform-bucket-level-access)
-  [[ $(jq -r '.versioning_enabled // false' <<<"$state") == true ]] || update+=(--versioning)
+  # The public bucket is a projection apply can rebuild, and an old version
+  # of an unpublished file would stay readable by generation (D52). Soft
+  # delete still covers mistakes.
+  local versioning=true
+  [[ $role == public ]] && versioning=false
+  if [[ $(jq -r '.versioning_enabled // false' <<<"$state") != "$versioning" ]]; then
+    [[ $versioning == true ]] && update+=(--versioning) || update+=(--no-versioning)
+  fi
   [[ $(jq -r '.soft_delete_policy.retentionDurationSeconds // 0 | tonumber' <<<"$state") == "$SOFT_DELETE_SECONDS" ]] ||
     update+=(--soft-delete-duration=30d)
   if [[ $(jq -r '.public_access_prevention // "inherited"' <<<"$state") != "$pap" ]]; then

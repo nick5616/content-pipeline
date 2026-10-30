@@ -1,4 +1,4 @@
-Plan 01JB7Z00000000000000000P1N: 2 to archive, 2 to upload, 0 jobs, 1 orphaned (against generation 0)
+Plan 01JB7Z00000000000000000P1N: 2 to archive, 2 to upload, 0 jobs, 0 to publish, 0 to unpublish, 1 orphaned (against generation 0)
   + archive   originals/sha256/cc/cc/cccccccccccc….png                 (sketch, 2.9 KB)
   + archive   originals/sha256/dd/dd/dddddddddddd….png                 (study, 3.0 KB)
   + upload    blobs/sha256/aa/aa/aaaaaaaaaaaa….png                     (sketch, 1000 B)

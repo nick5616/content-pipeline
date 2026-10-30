@@ -27,6 +27,10 @@ publicCorsOrigins:
   - https://www.3d.saucedog.art
   - http://localhost:5173
 
+# Where public files are served from (a CDN or your own domain); views link
+# here. Default: https://storage.googleapis.com/<publicBucket> (D54).
+# publicBaseUrl: https://media.example.com
+
 # Defaults: $XDG_CACHE_HOME/canon and $XDG_STATE_HOME/canon. Never the repo.
 # cacheDir: ~/.cache/canon
 # stateDir: ~/.local/state/canon

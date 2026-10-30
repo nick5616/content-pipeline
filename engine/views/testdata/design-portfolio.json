@@ -1,0 +1,52 @@
+{
+  "entries": [
+    {
+      "category": null,
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z00000000000000000009",
+      "key": null,
+      "kind": "video",
+      "links": [],
+      "mediums": [],
+      "order": null,
+      "preview": {
+        "kind": "none",
+        "urls": []
+      },
+      "slug": "laser-room-walkthrough",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "thumbnail": {
+        "alt": null,
+        "height": 180,
+        "lqip": null,
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/3dfd34a6-poster/w320.webp",
+            "width": 320
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/3dfd34a6-poster/w320.webp",
+        "width": 320
+      },
+      "title": "Laser Room Walkthrough",
+      "why": ""
+    }
+  ],
+  "filters": {
+    "tags": [],
+    "tech": []
+  },
+  "pipelineVersion": "0.5.0",
+  "taxonomy": {
+    "categories": [],
+    "mediums": [],
+    "tags": [],
+    "tech": []
+  },
+  "view": "design-portfolio",
+  "viewVersion": 1
+}

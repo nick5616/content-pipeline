@@ -27,6 +27,8 @@ type Desired struct {
 	Originals []LocalFile
 	// Jobs are the derived jobs the manifest needs (M4).
 	Jobs []Job
+	// Public is what the public bucket should hold; nil skips it (M5).
+	Public *PublicState
 }
 
 // Job is one needed job, as the plan sees it.
@@ -179,6 +181,10 @@ func Diff(d Desired, l Listing, utc string) ([]Op, []manifest.Problem) {
 		ops = append(ops, Op{Type: Orphan, Path: obj.Name, Bucket: Private, Detail: "not a content address", Bytes: ptr(obj.Size)})
 	}
 
+	if d.Public != nil {
+		diffPublic(d.Public, l.Public, func(o Op) { ops = append(ops, o) })
+	}
+
 	// The manifest last, then its snapshot.
 	sum := gcs.SHA256Hex(d.Manifest)
 	if l.Manifest == nil || l.Manifest.SHA256 != sum {
@@ -211,7 +217,10 @@ func Diff(d Desired, l Listing, utc string) ([]Op, []manifest.Problem) {
 
 // phase is the execution order (§1 of the M3 plan): everything a manifest
 // points at exists before the manifest does.
-var phase = map[OpType]int{ArchiveOriginal: 0, UploadBlob: 1, RunJob: 2, WriteManifest: 3, WriteHistory: 4, Orphan: 5}
+// Public: every file a view or the public manifest links is copied before
+// either is written, and unpublish runs after nothing links its files.
+var phase = map[OpType]int{ArchiveOriginal: 0, UploadBlob: 1, RunJob: 2, PublishCopy: 3, WriteManifest: 4,
+	WriteHistory: 5, WriteView: 6, WritePublicManifest: 7, Unpublish: 8, Orphan: 9}
 
 func describe(c store.Changes) string {
 	s := fmt.Sprintf("%d added, %d changed, %d removed", len(c.Added), len(c.Changed), len(c.Removed))

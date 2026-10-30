@@ -86,8 +86,11 @@ func TestFirstRunCreatesEverything(t *testing.T) {
 			t.Errorf("missing call: %s", want)
 		}
 	}
-	if !strings.Contains(m, "storage buckets update gs://canon-pub --versioning --cors-file=") {
-		t.Errorf("public bucket should get versioning and CORS in one update")
+	if !strings.Contains(m, "storage buckets update gs://canon-pub --cors-file=") {
+		t.Errorf("public bucket should get CORS")
+	}
+	if strings.Contains(m, "gs://canon-pub --versioning") {
+		t.Error("the public bucket must not get versioning (D52)")
 	}
 	// The archive is the only bucket where the account may not be objectAdmin.
 	if strings.Contains(m, "gs://canon-arch --member=serviceAccount:"+sa+" --role=roles/storage.objectAdmin") {
@@ -135,7 +138,7 @@ func TestDriftFixesOnlyWhatDiffers(t *testing.T) {
 	if len(m) != 2 {
 		t.Fatalf("want 2 changes, got %v", m)
 	}
-	if !strings.HasPrefix(m[0], "storage buckets update gs://canon-pub --versioning --cors-file=") {
+	if !strings.HasPrefix(m[0], "storage buckets update gs://canon-pub --no-versioning --cors-file=") {
 		t.Errorf("got %s", m[0])
 	}
 	if m[1] != "storage buckets add-iam-policy-binding gs://canon-arch --member=serviceAccount:"+sa+" --role=roles/storage.objectViewer" {

@@ -100,6 +100,8 @@ func TestValidate(t *testing.T) {
 		{"bad bucket name", "project: my-proj\npublicBucket: Canon.Pub\n", "publicBucket"},
 		{"reserved bucket", "project: my-proj\npublicBucket: artandmedia\n", "publicBucket"},
 		{"reserved originals bucket", "project: my-proj\narchiveBucket: artandmedia-originals\n", "archiveBucket"},
+		{"public base not https", "publicBaseUrl: http://cdn.example.com\n", "publicBaseUrl"},
+		{"public base trailing slash", "publicBaseUrl: https://cdn.example.com/\n", "publicBaseUrl"},
 		{"reserved copy bucket", "project: my-proj\nprivateBucket: artandmedia-copy\n", "privateBucket"},
 		{"reserved originals copy bucket", "project: my-proj\narchiveBucket: artandmedia-originals-copy\n", "archiveBucket"},
 		{"duplicate bucket", "project: my-proj\nprivateBucket: same-b\narchiveBucket: same-b\n", "archiveBucket"},
@@ -135,5 +137,19 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("want one problem on %s, got %v", tt.field, ps)
 			}
 		})
+	}
+}
+
+func TestPublicBase(t *testing.T) {
+	c := Config{PublicBucket: "canon-public"}
+	if got := c.PublicBase(); got != "https://storage.googleapis.com/canon-public" {
+		t.Errorf("default: %s", got)
+	}
+	c.PublicBaseURL = "https://media.example.com/canon"
+	if got := c.PublicBase(); got != c.PublicBaseURL {
+		t.Errorf("override: %s", got)
+	}
+	if (Config{}).PublicBase() != "" {
+		t.Error("no bucket should have no base")
 	}
 }

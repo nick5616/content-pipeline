@@ -32,6 +32,9 @@ import (
 const (
 	Private = "canon-test-private"
 	Archive = "canon-test-archive"
+	Public  = "canon-test-public"
+	// PublicBase is where views link the public bucket.
+	PublicBase = "https://storage.googleapis.com/" + Public
 )
 
 // Clock is the fixed time every test plan is made at, so history names are
@@ -50,6 +53,17 @@ type Env struct {
 	// Derived and Jobs are set by WithJobs.
 	Derived *derived.Store
 	Jobs    *jobs.DB
+	// Publish is set by WithPublic.
+	Publish bool
+}
+
+// WithPublic turns on publishing (M5) to the Public bucket, and jobs.
+func (e *Env) WithPublic() *Env {
+	if e.Jobs == nil {
+		e.WithJobs()
+	}
+	e.Publish = true
+	return e
 }
 
 // WithJobs turns on derived jobs (M4): plans run them first, applies
@@ -88,7 +102,7 @@ func New(t *testing.T, api gcs.API) *Env {
 }
 
 // Mem returns a fake with the test buckets.
-func Mem() *gcs.Mem { return gcs.NewMem(Private, Archive) }
+func Mem() *gcs.Mem { return gcs.NewMem(Private, Archive, Public) }
 
 // Remote is the private bucket as the sync code sees it.
 func (e *Env) Remote() store.Remote { return store.Remote{API: e.API, Bucket: Private} }
@@ -106,12 +120,22 @@ func (e *Env) PlanEnv() plan.Env {
 			return err
 		}
 	}
+	if e.Publish {
+		env.PublicBucket, env.PublicBase = Public, PublicBase
+	}
 	return env
 }
 
 // Deps is what apply.Apply needs.
 func (e *Env) Deps() apply.Deps {
-	return apply.Deps{API: e.API, Private: Private, Archive: Archive, Working: e.Working, Blobs: e.Blobs, Derived: e.Derived, StateDir: e.StateDir}
+	return apply.Deps{API: e.API, Private: Private, Archive: Archive, Working: e.Working, Blobs: e.Blobs, Derived: e.Derived, Public: publicIf(e.Publish), StateDir: e.StateDir}
+}
+
+func publicIf(on bool) string {
+	if on {
+		return Public
+	}
+	return ""
 }
 
 // seeds caches ingested state by fixture list: ingest runs real tools and

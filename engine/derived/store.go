@@ -68,19 +68,28 @@ type File struct {
 	SHA256 string `json:"sha256"`
 	Size   int64  `json:"size"`
 	Type   string `json:"type"` // MIME type
+	// Width and Height are set for images (views need them).
+	Width  int `json:"width,omitempty"`
+	Height int `json:"height,omitempty"`
 }
 
 // Output is a file ready to commit. Make one with Media or JSON.
 type Output struct {
 	name, path, sum, mime string
 	size                  int64
+	width, height         int
 }
 
 var fileName = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,63}$`)
 
 // Media wraps a verified media file as an output called name.
 func Media(name string, v sanitize.Verified) Output {
-	return Output{name: name, path: v.Path(), sum: v.SHA256(), mime: v.Type().MIME, size: v.Size()}
+	o := Output{name: name, path: v.Path(), sum: v.SHA256(), mime: v.Type().MIME, size: v.Size()}
+	// exiftool -n reports "W H" for every image it reads.
+	if sz, ok := v.Tags()["Composite:ImageSize"].(string); ok {
+		fmt.Sscanf(sz, "%d %d", &o.width, &o.height)
+	}
+	return o
 }
 
 // JSON writes v as name in dir (Go-encoded, so it carries nothing but v).
@@ -116,7 +125,7 @@ func (s *Store) Commit(scratch string, rc Receipt, outs []Output) (Done, error) 
 			return Done{}, fmt.Errorf("derived: output %q isn't %s in the job's scratch dir", o.path, o.name)
 		}
 		seen[o.name] = true
-		rc.Files = append(rc.Files, File{Name: o.name, SHA256: o.sum, Size: o.size, Type: o.mime})
+		rc.Files = append(rc.Files, File{Name: o.name, SHA256: o.sum, Size: o.size, Type: o.mime, Width: o.width, Height: o.height})
 	}
 	sort.Slice(rc.Files, func(i, j int) bool { return rc.Files[i].Name < rc.Files[j].Name })
 	// Anything else in scratch (tool intermediates) is not an output.

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nick5616/canon/engine/manifest"
 	"github.com/nick5616/canon/engine/media"
 	"github.com/nick5616/canon/engine/sanitize"
 	"github.com/nick5616/canon/internal/testmedia"
@@ -17,7 +18,7 @@ import (
 
 func src(t *testing.T, name string, typ media.Type) Source {
 	t.Helper()
-	return Source{Path: filepath.Join(testmedia.Dir(t), name), Type: typ, FirstImage: true}
+	return Source{Path: filepath.Join(testmedia.Dir(t), name), Type: typ, Kind: manifest.KindArtwork, FirstImage: true}
 }
 
 // run runs r on s and verifies every media output, as the job runner does.
@@ -165,8 +166,11 @@ func TestPalette(t *testing.T) {
 	if !reflect.DeepEqual(a.Facts, b.Facts) {
 		t.Errorf("not deterministic: %v vs %v", a.Facts, b.Facts)
 	}
-	if palette.Applies(Source{Type: media.PNG}) {
+	if palette.Applies(Source{Type: media.PNG, Kind: manifest.KindArtwork}) {
 		t.Error("palette applies to an item's second image")
+	}
+	if palette.Applies(Source{Type: media.PNG, Kind: manifest.KindProject, FirstImage: true}) {
+		t.Error("palette applies to a project's thumbnail (project facts have no palette)")
 	}
 }
 
@@ -228,7 +232,7 @@ func TestMedianCutTransparent(t *testing.T) {
 	if out, err := exec.Command("vips", "black", p, "8", "8", "--bands", "4").CombinedOutput(); err != nil {
 		t.Fatalf("%v %s", err, out)
 	}
-	res, _ := run(t, palette, Source{Path: p, Type: media.PNG, FirstImage: true})
+	res, _ := run(t, palette, Source{Path: p, Type: media.PNG, Kind: manifest.KindArtwork, FirstImage: true})
 	if _, ok := res.Facts["palette"]; ok {
 		t.Errorf("a fully transparent image got a palette: %v", res.Facts)
 	}

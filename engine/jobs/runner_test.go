@@ -335,3 +335,18 @@ func TestDesiredDedupesAndFirstImage(t *testing.T) {
 		t.Errorf("got %s\nwant %s", strings.Join(names, ","), want)
 	}
 }
+
+// A fact the item's kind doesn't allow: the update is refused, nothing is
+// written, and the report doesn't claim it filled anything.
+func TestFactsThatDontValidate(t *testing.T) {
+	var c counter
+	e := newEnv(t, jsonRecipe("fake", &c, map[string]any{"bpm": 120.0}, nil)) // png is an artwork
+	_, rev, _, _ := e.w.Load()
+	rep, err := e.r.Run(context.Background(), Options{})
+	if err == nil || rep.Facts != 0 {
+		t.Fatalf("got %+v, %v; want an error and no facts", rep, err)
+	}
+	if _, rev2, _, _ := e.w.Load(); rev2 != rev {
+		t.Error("an invalid fill was written")
+	}
+}

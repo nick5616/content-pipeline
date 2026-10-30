@@ -1,7 +1,9 @@
 // Package apply executes a saved plan, and nothing else. It is the only code
 // that writes to a bucket. Sanitized blobs go to the private bucket and
 // untouched originals to the archive, through separate writers that take
-// separate types, so an original can't reach the private bucket.
+// separate types, so an original can't reach the private bucket. The public
+// bucket only gets server-side copies of private objects and the plan's
+// views and public manifest (M5).
 package apply
 
 import (
@@ -21,6 +23,7 @@ import (
 	"github.com/nick5616/canon/engine/blobstore"
 	"github.com/nick5616/canon/engine/derived"
 	"github.com/nick5616/canon/engine/gcs"
+	"github.com/nick5616/canon/engine/importbucket"
 	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/media"
 	"github.com/nick5616/canon/engine/plan"
@@ -32,6 +35,7 @@ type Deps struct {
 	API     gcs.API
 	Private string // bucket names
 	Archive string
+	Public  string
 	Working *store.Working
 	Blobs   *blobstore.Store
 	Derived *derived.Store
@@ -112,6 +116,7 @@ func Apply(ctx context.Context, p *plan.Plan, d Deps, progress func(Status)) (St
 
 	priv := privateWriter{d.API, d.Private}
 	arch := archiveWriter{d.API, d.Archive}
+	pub := publicWriter{d.API, d.Public}
 	for _, op := range p.Ops {
 		if !op.Writes() {
 			continue
@@ -146,6 +151,22 @@ func Apply(ctx context.Context, p *plan.Plan, d Deps, progress func(Status)) (St
 			if err := priv.job(ctx, key, dn); err != nil {
 				return fail(err)
 			}
+		case plan.PublishCopy:
+			if err := pub.copy(ctx, d.Private, op.Path); err != nil {
+				return fail(err)
+			}
+		case plan.WriteView, plan.WritePublicManifest:
+			b, ok := p.PublicBytes(op.Path)
+			if !ok || op.Bytes == nil || int64(len(b)) != *op.Bytes {
+				return fail(fmt.Errorf("apply: the plan's bytes for %s are missing; run `canon plan` again", op.Path))
+			}
+			if err := pub.json(ctx, op.Path, b); err != nil {
+				return fail(err)
+			}
+		case plan.Unpublish:
+			if err := pub.remove(ctx, op.Path); err != nil {
+				return fail(err)
+			}
 		case plan.WriteManifest:
 			obj, err := priv.manifest(ctx, b, p.Generation)
 			if errors.Is(err, gcs.ErrPrecondition) {
@@ -170,6 +191,11 @@ func Apply(ctx context.Context, p *plan.Plan, d Deps, progress func(Status)) (St
 	}
 	st.State = "done"
 	report()
+	// What's now public, for sites moving off an imported bucket (D43).
+	// Best effort: the buckets are done, and the next apply rewrites it.
+	if imgs := p.PublicImages(); imgs != nil && d.StateDir != "" {
+		_ = importbucket.WriteRedirects(d.StateDir, imgs)
+	}
 	return st, nil
 }
 
@@ -233,6 +259,84 @@ type archiveWriter struct {
 func (w archiveWriter) original(ctx context.Context, o blobstore.ArchivedOriginal) error {
 	// Never replaced: the archive account can only create (D14, D38).
 	return putFile(ctx, w.api, w.bucket, plan.OriginalPath(o.SHA256(), o.Ext()), o.Path(), o.SHA256(), contentType(o.Ext()), false)
+}
+
+// publicWriter writes the public bucket. It can only copy objects that
+// are already in the private bucket (so only sanitized or derived bytes)
+// and write the plan's views and public manifest; it has no upload of a
+// local file.
+type publicWriter struct {
+	api    gcs.API
+	bucket string
+}
+
+// Public cache lifetimes (D53).
+const (
+	publicFileCache = "public, max-age=86400"
+	publicJSONCache = "public, max-age=60"
+)
+
+// copy publishes a private object under the same name.
+func (w publicWriter) copy(ctx context.Context, private, name string) error {
+	if w.bucket == "" {
+		return errors.New("apply: publish-copy needs publicBucket in the config file")
+	}
+	src := name
+	want, err := w.api.Attrs(ctx, private, src)
+	if err != nil {
+		return fmt.Errorf("publish %s: the private copy: %w", src, err)
+	}
+	o := gcs.CopyOpts{CacheControl: publicFileCache}
+	_, err = w.api.Copy(ctx, private, src, w.bucket, name, o)
+	if !errors.Is(err, gcs.ErrPrecondition) {
+		return err
+	}
+	cur, err := w.api.Attrs(ctx, w.bucket, name)
+	if err != nil {
+		return err
+	}
+	if cur.SHA256 == want.SHA256 && want.SHA256 != "" {
+		return nil
+	}
+	o.IfGeneration = cur.Generation
+	_, err = w.api.Copy(ctx, private, src, w.bucket, name, o)
+	return err
+}
+
+func (w publicWriter) json(ctx context.Context, name string, b []byte) error {
+	if w.bucket == "" {
+		return errors.New("apply: writing views needs publicBucket in the config file")
+	}
+	gen := int64(0)
+	switch cur, err := w.api.Attrs(ctx, w.bucket, name); {
+	case errors.Is(err, gcs.ErrNotExist):
+	case err != nil:
+		return err
+	default:
+		if cur.SHA256 == gcs.SHA256Hex(b) {
+			return nil
+		}
+		gen = cur.Generation
+	}
+	o := opts(b, "application/json", gen)
+	o.CacheControl = publicJSONCache
+	_, err := w.api.Write(ctx, w.bucket, name, bytes.NewReader(b), o)
+	return err
+}
+
+func (w publicWriter) remove(ctx context.Context, name string) error {
+	cur, err := w.api.Attrs(ctx, w.bucket, name)
+	if errors.Is(err, gcs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	err = w.api.Delete(ctx, w.bucket, name, cur.Generation)
+	if errors.Is(err, gcs.ErrNotExist) {
+		return nil
+	}
+	return err
 }
 
 func opts(b []byte, ct string, gen int64) gcs.WriteOpts {

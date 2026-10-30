@@ -1,0 +1,48 @@
+{
+  "artist": "Nicole Belovoskey",
+  "entries": [
+    {
+      "category": null,
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z00000000000000000006",
+      "key": null,
+      "kind": "collection",
+      "links": [],
+      "mediums": [],
+      "order": null,
+      "slug": "music",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "title": "Music",
+      "why": ""
+    }
+  ],
+  "pipelineVersion": "0.5.0",
+  "taxonomy": {
+    "categories": [],
+    "mediums": [],
+    "tags": [],
+    "tech": []
+  },
+  "tracks": [
+    {
+      "analysis": "https://storage.googleapis.com/canon-public-example/derived/00f3af97-djgrid/analysis.json",
+      "artist": "Nicole Belovoskey",
+      "audio": "https://storage.googleapis.com/canon-public-example/blobs/sha256/00f3af97.mp3",
+      "bpm": 124,
+      "camelot": "8A",
+      "duration": 214.5,
+      "firstBeat": 0.112,
+      "id": "01JB7Z00000000000000000007",
+      "key": "A minor",
+      "slug": "first-light",
+      "start": 32,
+      "title": "First Light"
+    }
+  ],
+  "view": "holodeck-dj-room",
+  "viewVersion": 1
+}

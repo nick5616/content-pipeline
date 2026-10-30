@@ -66,13 +66,16 @@ func (e *Engine) PlanEnv(ctx context.Context) (plan.Env, error) {
 	if e.Jobs != nil {
 		env.Derived, env.RunJobs, env.JobState = e.Derived, e.runJobsForPlan, e.jobState
 	}
+	if e.Config.PublicBucket != "" {
+		env.PublicBucket, env.PublicBase = e.Config.PublicBucket, e.Config.PublicBase()
+	}
 	return env, err
 }
 
 // Deps is what apply.Apply needs.
 func (e *Engine) Deps(ctx context.Context) (apply.Deps, error) {
 	r, err := e.remote(ctx)
-	return apply.Deps{API: r.API, Private: e.Config.PrivateBucket, Archive: e.Config.ArchiveBucket,
+	return apply.Deps{API: r.API, Private: e.Config.PrivateBucket, Archive: e.Config.ArchiveBucket, Public: e.Config.PublicBucket,
 		Working: e.Working, Blobs: e.Blobs, Derived: e.Derived, StateDir: e.StateDir}, err
 }
 
@@ -101,6 +104,9 @@ func (a *engineAPI) routes(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/items/{id}", h(a.updateItem))
 	mux.HandleFunc("DELETE /api/items/{id}", h(a.deleteItem))
 	mux.HandleFunc("GET /api/taxonomy", h(a.getTaxonomy))
+	mux.HandleFunc("GET /api/surfaces", h(a.listSurfaces))
+	mux.HandleFunc("GET /api/surfaces/{id}/preview", h(a.previewSurface))
+	mux.HandleFunc("PUT /api/surfaces/{id}", h(a.putSurface))
 	mux.HandleFunc("PUT /api/taxonomy/{vocab}/{slug}", h(a.putTerm))
 	mux.HandleFunc("POST /api/plans", h(a.createPlan))
 	mux.HandleFunc("GET /api/plans/{id}", h(a.getPlan))

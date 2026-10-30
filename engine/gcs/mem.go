@@ -164,6 +164,56 @@ func (m *Mem) Write(ctx context.Context, bucket, name string, r io.Reader, opts 
 	return o.object(name), nil
 }
 
+func (m *Mem) Copy(ctx context.Context, srcBucket, src, dstBucket, dst string, o CopyOpts) (Object, error) {
+	if _, err := m.call("copy", dstBucket, dst); err != nil {
+		return Object{}, err
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	sb, ok := m.buckets[srcBucket]
+	if !ok {
+		return Object{}, fmt.Errorf("no bucket %s", srcBucket)
+	}
+	from, ok := sb[src]
+	if !ok {
+		return Object{}, ErrNotExist
+	}
+	db := m.buckets[dstBucket]
+	cur, exists := db[dst]
+	if (o.IfGeneration == 0 && exists) || (o.IfGeneration != 0 && (!exists || cur.gen != o.IfGeneration)) {
+		return Object{}, ErrPrecondition
+	}
+	ct := from.ct
+	if o.ContentType != "" {
+		ct = o.ContentType
+	}
+	m.gen++
+	obj := &memObject{data: bytes.Clone(from.data), gen: m.gen, meta: maps.Clone(from.meta), ct: ct, cc: o.CacheControl}
+	db[dst] = obj
+	return obj.object(dst), nil
+}
+
+func (m *Mem) Delete(_ context.Context, bucket, name string, gen int64) error {
+	b, err := m.call("delete", bucket, name)
+	if err != nil {
+		return err
+	}
+	if gen <= 0 {
+		return fmt.Errorf("delete %s/%s: a generation is required", bucket, name)
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	o, ok := b[name]
+	if !ok {
+		return ErrNotExist
+	}
+	if o.gen != gen {
+		return ErrPrecondition
+	}
+	delete(b, name)
+	return nil
+}
+
 func (m *Mem) Close() error { return nil }
 
 func (o *memObject) object(name string) Object {

@@ -15,14 +15,14 @@ func TestParseDate(t *testing.T) {
 		{"Sometime in like Oct 2025", "2025-10", "Sometime in like Oct 2025"},
 		{" Sept 2021 ", "2021-09", ""},
 	} {
-		v, l, ok := parseDate(c.in)
+		v, l, ok := ParseDate(c.in)
 		if !ok || v != c.value || l != c.label {
-			t.Errorf("parseDate(%q) = %q, %q, %v; want %q, %q", c.in, v, l, ok, c.value, c.label)
+			t.Errorf("ParseDate(%q) = %q, %q, %v; want %q, %q", c.in, v, l, ok, c.value, c.label)
 		}
 	}
 	for _, bad := range []string{"3", "", "someday", "13/1/2025", "2022 or 2023", "May or June 2024"} {
-		if v, l, ok := parseDate(bad); ok {
-			t.Errorf("parseDate(%q) = %q, %q; want not ok", bad, v, l)
+		if v, l, ok := ParseDate(bad); ok {
+			t.Errorf("ParseDate(%q) = %q, %q; want not ok", bad, v, l)
 		}
 	}
 }

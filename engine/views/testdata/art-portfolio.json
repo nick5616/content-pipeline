@@ -1,0 +1,101 @@
+{
+  "entries": [
+    {
+      "category": null,
+      "cover": null,
+      "date": {
+        "display": "Oct 3, 2025",
+        "label": null,
+        "sortKey": 20251003,
+        "value": "2025-10-03"
+      },
+      "featured": false,
+      "id": "01JB7Z00000000000000000003",
+      "image": {
+        "alt": "Lanterns over a crowded street",
+        "height": 600,
+        "lqip": "data:image/webp;base64,UklGRmZha2U=",
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b-thumb/w320.webp",
+            "width": 320
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b-thumb/w800.webp",
+            "width": 800
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/e5c0216b-thumb/w800.webp",
+        "width": 800
+      },
+      "key": null,
+      "kind": "artwork",
+      "links": [],
+      "mediums": [
+        "digital"
+      ],
+      "memberCount": null,
+      "order": 1,
+      "section": "primary",
+      "slug": "night-market-study",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "title": "Night Market Study",
+      "why": ""
+    },
+    {
+      "category": null,
+      "cover": {
+        "alt": null,
+        "height": 600,
+        "lqip": "data:image/webp;base64,UklGRmZha2U=",
+        "srcset": [
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/a854b5d5-thumb/w320.webp",
+            "width": 320
+          },
+          {
+            "url": "https://storage.googleapis.com/canon-public-example/derived/a854b5d5-thumb/w800.webp",
+            "width": 800
+          }
+        ],
+        "url": "https://storage.googleapis.com/canon-public-example/derived/a854b5d5-thumb/w800.webp",
+        "width": 800
+      },
+      "date": null,
+      "featured": false,
+      "id": "01JB7Z00000000000000000005",
+      "image": null,
+      "key": null,
+      "kind": "collection",
+      "links": [],
+      "mediums": [],
+      "memberCount": 1,
+      "order": 2,
+      "section": "collections",
+      "slug": "sketches",
+      "status": null,
+      "summary": "Quick studies.",
+      "tags": [],
+      "tech": [],
+      "title": "Sketches",
+      "why": ""
+    }
+  ],
+  "pipelineVersion": "0.5.0",
+  "taxonomy": {
+    "categories": [],
+    "mediums": [
+      {
+        "label": "Digital",
+        "slug": "digital"
+      }
+    ],
+    "tags": [],
+    "tech": []
+  },
+  "view": "art-portfolio",
+  "viewVersion": 1
+}

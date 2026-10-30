@@ -3,8 +3,8 @@
 # reads from $STUB_STATE:
 #   none   nothing exists
 #   all    everything exists with the right settings
-#   drift  everything exists, but the public bucket lacks versioning and has
-#          stale CORS, and the archive bucket lacks the objectViewer binding
+#   drift  everything exists, but the public bucket still has versioning (D52)
+#          and stale CORS, and the archive bucket lacks the objectViewer binding
 set -euo pipefail
 printf '%s\n' "$*" >>"$STUB_LOG"
 args=" $* "
@@ -23,10 +23,10 @@ case "$args" in
     b=${4#gs://}
     pap=enforced versioning=true cors=null
     if [[ $b == "$STUB_PUBLIC" ]]; then
-      pap=inherited
+      pap=inherited versioning=false
       cors="[{\"maxAgeSeconds\": 3600, \"method\": [\"HEAD\", \"GET\"], \"origin\": [\"https://b.example\", \"https://a.example\"], \"responseHeader\": [\"Content-Type\"]}]"
       if [[ $STUB_STATE == drift ]]; then
-        versioning=false
+        versioning=true
         cors="[{\"maxAgeSeconds\": 3600, \"method\": [\"GET\"], \"origin\": [\"https://a.example\"], \"responseHeader\": [\"Content-Type\"]}]"
       fi
     fi

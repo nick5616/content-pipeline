@@ -55,6 +55,17 @@ rewrite old ones. Full context: [plans/M0-M1.md](plans/M0-M1.md).
 | D48 | 2026-10-29 | M4 G4: recipes only fill empty facts; `canon jobs run --refresh-facts` overwrites. Imported `crate.json` values (from the AIFF masters) stay. |
 | D49 | 2026-10-29 | M4 G5: `dj-mp3@v1` runs only on lossless sources (AIFF, WAV, FLAC); an MP3 source is played as is. |
 | D50 | 2026-10-29 | M4 G6: local API 1.3.0 (additive): `POST /api/jobs/run` (`runJobs`, CLI `canon jobs run`). `run-job` ops mean "upload this job's outputs". |
+| D51 | 2026-10-29 | M5 H1: a public item exposes only what its views link: `thumb` sizes (at most 3200 px) and `lqip` for images, the source MP3 (or `dj-mp3`), `djgrid` analysis and previews for tracks, `web` and poster for video. Full-resolution sources stay private. |
+| D52 | 2026-10-29 | M5 H2: the public bucket has no object versioning (soft delete stays at 30 days), so an unpublished file can't be read by generation number. It's a projection apply can rebuild from the private bucket. |
+| D53 | 2026-10-29 | M5 H3: public `blobs/` and `derived/` are served `public, max-age=86400`, not a year, so an unpublished file leaves caches within a day. Manifest and views stay at 60 s. |
+| D54 | 2026-10-29 | M5 H4: public URLs are `publicBaseUrl` + path; the default is `https://storage.googleapis.com/<publicBucket>`. |
+| D55 | 2026-10-29 | M5 H5: nothing is published automatically. M5 ends with `canon view` previews; placing and publishing the art and DJ rooms is a separate, approved step. |
+| D56 | 2026-10-29 | `thumb` and `poster` are v2: receipts record each image's width and height (read from the verified file), which views need. The 121 `thumb@v1` outputs in the private bucket are orphans until M8's gc. |
+| D57 | 2026-10-29 | The DJ room's crate `artist` is the Music collection's credit, else the tracks' most common artist credit, else the profile name. (The plan said collection credit, then profile name; your tracks are credited to Bird Dog and the collection to no one.) |
+| D58 | 2026-10-30 | Local API 1.4.0 (additive): `PUT /api/surfaces/{id}` (`putSurface`, CLI `canon surface set <id> label=...`). A manifest made from scratch declares no surfaces, and placements can only name declared ones. |
+| D59 | 2026-10-30 | M7 J5: owned domains are `nicolebelovoskey.com`, `nickbelovoskey.com`, `nickeltools.dev`, `saucedog.art`, each with `*.` subdomains, plus each `netlify.app` host the content links to (exact). `videogamequest.me` is gone (links rewrite to `rpg-quests.netlify.app`). MidiMuse and Smart Piano stay separate items; Smart Piano ranks after MidiMuse (it's the lightweight toy of the same music math). Categories merge: Games and Gaming become `gaming` ("Gaming"); Social Tools and Social App become `social` ("Social"). |
+| D60 | 2026-10-30 | M7 J2: sites read `views/<surface>.json` from the public bucket with a plain `fetch` and a hand-written TypeScript types file per view; no vendored or published client. |
+| D61 | 2026-10-30 | `tierlistify.com` was given up: Tierlistify's links and previews use `tierlistify.netlify.app` (a rewrite rule, like `videogamequest.me`). `friendex.online` (and subdomains) is owned. |
 
 ## M1 schema calls (approved 2026-10-28)
 

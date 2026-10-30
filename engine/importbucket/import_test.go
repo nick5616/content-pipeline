@@ -284,3 +284,27 @@ func TestImportPrefixAndFailures(t *testing.T) {
 		t.Errorf("digitalart members: %v", c.Members)
 	}
 }
+
+func TestWriteRedirects(t *testing.T) {
+	dir := t.TempDir()
+	os.MkdirAll(filepath.Join(dir, "imports"), 0o755)
+	rep := `{"bucket": "old-art", "results": [
+		{"object": "digitalart/a.jpg", "status": "imported", "item": "01A", "slug": "a"},
+		{"object": "digitalart/b.jpg", "status": "imported", "item": "01B", "slug": "b"},
+		{"object": "digitalart/", "status": "skipped"}]}`
+	os.WriteFile(filepath.Join(dir, "imports", "old-art.json"), []byte(rep), 0o644)
+	if err := WriteRedirects(dir, map[string]string{"01B": "https://example.com/derived/x/w800.webp"}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(dir, "imports", "old-art-urls.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), `"object": "digitalart/b.jpg"`) || strings.Contains(string(b), "a.jpg") {
+		t.Errorf("redirects: %s", b)
+	}
+	// Rerunning skips the -urls file itself.
+	if err := WriteRedirects(dir, nil); err != nil {
+		t.Fatal(err)
+	}
+}

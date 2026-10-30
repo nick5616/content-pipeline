@@ -354,7 +354,7 @@ func pickDate(md map[string]string) (*manifest.Date, []string) {
 		if raw == "" {
 			continue
 		}
-		v, label, ok := parseDate(raw)
+		v, label, ok := ParseDate(raw)
 		if !ok {
 			warn = append(warn, fmt.Sprintf("%s %q isn't a date; left out", key, raw))
 			continue

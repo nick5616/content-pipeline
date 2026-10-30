@@ -20,6 +20,7 @@ import (
 	"github.com/nick5616/canon/engine/blobstore"
 	"github.com/nick5616/canon/engine/canonjson"
 	"github.com/nick5616/canon/engine/derived"
+	"github.com/nick5616/canon/engine/gcs"
 	"github.com/nick5616/canon/engine/ids"
 	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/manifest"
@@ -35,9 +36,14 @@ const (
 	ArchiveOriginal OpType = "archive-original"
 	UploadBlob      OpType = "upload-blob"
 	RunJob          OpType = "run-job" // upload a finished job's outputs (D50)
-	WriteManifest   OpType = "write-manifest"
-	WriteHistory    OpType = "write-history"
-	Orphan          OpType = "orphan" // reported, never executed
+	// The public bucket (M5).
+	PublishCopy         OpType = "publish-copy" // server-side copy from the private bucket
+	WriteView           OpType = "write-view"
+	WritePublicManifest OpType = "write-public-manifest"
+	Unpublish           OpType = "unpublish" // the only delete before M8
+	WriteManifest       OpType = "write-manifest"
+	WriteHistory        OpType = "write-history"
+	Orphan              OpType = "orphan" // reported, never executed
 )
 
 // Bucket is a bucket role.
@@ -62,7 +68,7 @@ type Op struct {
 // Writes reports whether the op changes anything.
 func (o Op) Writes() bool { return o.Type != Orphan }
 
-// Summary counts ops by kind. publish and unpublish stay 0 until M5.
+// Summary counts ops by kind.
 type Summary struct {
 	Archive   int `json:"archive"`
 	Upload    int `json:"upload"`
@@ -83,6 +89,10 @@ type Plan struct {
 	Summary  Summary            `json:"summary"`
 	Ops      []Op               `json:"ops"`
 	Problems []manifest.Problem `json:"problems"`
+
+	// public is what write-view and write-public-manifest write, kept in
+	// the sidecar file.
+	public *PublicState
 }
 
 // Empty reports whether applying would write nothing.
@@ -109,6 +119,9 @@ type Env struct {
 	RunJobs func(ctx context.Context) error
 	// JobState reports a job's local state, for the plan's warnings.
 	JobState func(key string) (state, lastError string)
+	// PublicBucket and PublicBase enable publishing (M5); PublicBase is
+	// the URL views link under (D54).
+	PublicBucket, PublicBase string
 }
 
 // Current returns the working manifest's bytes as apply would write them:
@@ -170,6 +183,25 @@ func Make(ctx context.Context, env Env) (*Plan, error) {
 	if env.Derived != nil {
 		d.Jobs = GatherJobs(m, env.Blobs, env.Derived, l, env.JobState)
 	}
+	switch {
+	case env.PublicBucket != "" && env.Derived != nil:
+		objs, err := env.Remote.API.List(ctx, env.PublicBucket, "")
+		if err != nil {
+			return nil, err
+		}
+		l.Public = map[string]gcs.Object{}
+		for _, o := range objs {
+			l.Public[o.Name] = o
+		}
+		pub, pubPs, err := GatherPublic(ctx, m, env, l)
+		if err != nil {
+			return nil, err
+		}
+		d.Public = pub
+		ps = append(ps, pubPs...)
+	case anyPublic(m):
+		return nil, ErrNoPublicBucket
+	}
 
 	now := time.Now
 	if env.Now != nil {
@@ -185,7 +217,7 @@ func Make(ctx context.Context, env Env) (*Plan, error) {
 	if env.IDs != nil {
 		id = env.IDs.New()
 	}
-	p := &Plan{ID: id.String(), Revision: d.Revision, Ops: ops, Problems: ps}
+	p := &Plan{ID: id.String(), Revision: d.Revision, Ops: ops, Problems: ps, public: d.Public}
 	if l.Manifest != nil {
 		p.Generation = l.Manifest.Generation
 	}
@@ -203,6 +235,10 @@ func Make(ctx context.Context, env Env) (*Plan, error) {
 			p.Summary.Upload++
 		case RunJob:
 			p.Summary.Jobs++
+		case PublishCopy:
+			p.Summary.Publish++
+		case Unpublish:
+			p.Summary.Unpublish++
 		case Orphan:
 			p.Summary.Orphaned++
 		}
@@ -288,13 +324,25 @@ func Save(stateDir string, p *Plan) (string, error) {
 	return path, WriteFile(path, p)
 }
 
-// WriteFile writes p as canonical JSON.
+// WriteFile writes p as canonical JSON, and its public bytes beside it.
 func WriteFile(path string, p *Plan) error {
 	b, err := canonjson.Marshal(p)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, b, 0o600)
+	if err := os.WriteFile(path, b, 0o600); err != nil {
+		return err
+	}
+	return writeSidecar(path, p)
+}
+
+func anyPublic(m *manifest.Manifest) bool {
+	for _, it := range m.Items {
+		if it.Visibility == manifest.ItemVisibilityPublic {
+			return true
+		}
+	}
+	return false
 }
 
 // ErrNotFound means no saved plan has that id.
@@ -323,6 +371,9 @@ func Open(stateDir, idOrPath string) (*Plan, error) {
 	if !idRe.MatchString(p.ID) {
 		return nil, fmt.Errorf("read plan %s: bad id %q", idOrPath, p.ID)
 	}
+	if err := readSidecar(path, &p); err != nil {
+		return nil, err
+	}
 	return &p, nil
 }
 
@@ -331,8 +382,8 @@ func Render(w io.Writer, p *Plan) error {
 	if p.Empty() {
 		fmt.Fprintf(w, "No changes. The buckets match the working manifest (generation %d).\n", p.Generation)
 	} else {
-		fmt.Fprintf(w, "Plan %s: %d to archive, %d to upload, %d jobs, %d orphaned (against generation %d)\n",
-			p.ID, p.Summary.Archive, p.Summary.Upload, p.Summary.Jobs, p.Summary.Orphaned, p.Generation)
+		fmt.Fprintf(w, "Plan %s: %d to archive, %d to upload, %d jobs, %d to publish, %d to unpublish, %d orphaned (against generation %d)\n",
+			p.ID, p.Summary.Archive, p.Summary.Upload, p.Summary.Jobs, p.Summary.Publish, p.Summary.Unpublish, p.Summary.Orphaned, p.Generation)
 	}
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	for _, o := range p.Ops {
@@ -363,12 +414,16 @@ func Render(w io.Writer, p *Plan) error {
 }
 
 var opLabel = map[OpType][2]string{
-	ArchiveOriginal: {"+", "archive"},
-	UploadBlob:      {"+", "upload"},
-	RunJob:          {"+", "job"},
-	WriteManifest:   {"~", "manifest"},
-	WriteHistory:    {"+", "history"},
-	Orphan:          {"?", "orphan"},
+	ArchiveOriginal:     {"+", "archive"},
+	UploadBlob:          {"+", "upload"},
+	RunJob:              {"+", "job"},
+	PublishCopy:         {"+", "publish"},
+	WriteView:           {"~", "view"},
+	WritePublicManifest: {"~", "public"},
+	Unpublish:           {"-", "unpublish"},
+	WriteManifest:       {"~", "manifest"},
+	WriteHistory:        {"+", "history"},
+	Orphan:              {"?", "orphan"},
 }
 
 // short abbreviates the hash in a content-addressed path.

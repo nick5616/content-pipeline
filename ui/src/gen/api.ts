@@ -175,6 +175,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/surfaces/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Declare or update a surface in the manifest's surfaces table */
+        put: operations["putSurface"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/surfaces/{id}/preview": {
         parameters: {
             query?: never;
@@ -745,6 +762,11 @@ export interface components {
             mediums: components["schemas"]["taxonomyTerm"][];
             tags: components["schemas"]["taxonomyTerm"][];
             viewports: components["schemas"]["viewport"][];
+        };
+        surface: {
+            id: components["schemas"]["slug"];
+            label: string;
+            baseUrl?: components["schemas"]["httpUrl"];
         };
         /** @description A date as views ship it: display and sortKey precomputed, so no site parses dates. */
         resolvedDate: {
@@ -1537,6 +1559,39 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    putSurface: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The revision the edit was based on. */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                id: components["schemas"]["slug"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["surface"];
+            };
+        };
+        responses: {
+            /** @description Saved; every declared surface. */
+            200: {
+                headers: {
+                    ETag: components["headers"]["Revision"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurfaceInfo"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["Invalid"];
         };
     };
     previewSurface: {

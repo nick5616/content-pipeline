@@ -39,8 +39,9 @@ func duration(ctx context.Context, t Tools, path string) (float64, error) {
 
 func secs(f float64) string { return strconv.FormatFloat(f, 'f', 3, 64) }
 
+// v2: receipts record each size's width and height, like thumb@v2.
 var poster = Recipe{
-	Name: "poster", Version: 1,
+	Name: "poster", Version: 2,
 	Params:  map[string]any{"at": 0.1, "widths": thumbWidths, "quality": 80, "format": "webp"},
 	Applies: isVideo,
 	FFmpeg:  true,

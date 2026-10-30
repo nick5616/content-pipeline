@@ -342,15 +342,17 @@ func (c *checker) previewURLs(pp string, pl Placement) {
 	}
 }
 
-// isOwned matches a URL's host against ownedDomains: exact hosts, or
+func (c *checker) isOwned(raw string) bool { return Owned(c.owned, raw) }
+
+// Owned matches a URL's host against ownedDomains: exact hosts, or
 // *.domain for any subdomain (not the apex).
-func (c *checker) isOwned(raw string) bool {
+func Owned(owned []string, raw string) bool {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return false
 	}
 	host := strings.ToLower(strings.TrimSuffix(u.Hostname(), "."))
-	for _, d := range c.owned {
+	for _, d := range owned {
 		if rest, ok := strings.CutPrefix(d, "*."); ok {
 			if strings.HasSuffix(host, "."+rest) {
 				return true

@@ -56,6 +56,9 @@ type FileResult struct {
 type Options struct {
 	Kind   manifest.Kind // "" picks by type (D29)
 	DryRun bool          // detect, sanitize and verify only; store nothing
+	// BlobOnly stores the blob and keeps the original, but drafts no item:
+	// for an asset of an item made elsewhere (a content.ts thumbnail).
+	BlobOnly bool
 }
 
 // Ingester holds what ingest needs. NewIngester wires the real tools.
@@ -137,7 +140,7 @@ func (in *Ingester) Process(ctx context.Context, o blobstore.Original, opts Opti
 	if err != nil {
 		return fail(err)
 	}
-	if it := findOriginal(m, origRef); it != nil {
+	if it := findOriginal(m, origRef); it != nil && !opts.BlobOnly {
 		return existing(&r, it, "already ingested as "+string(it.Slug), step)
 	}
 
@@ -187,6 +190,11 @@ func (in *Ingester) Process(ctx context.Context, o blobstore.Original, opts Opti
 	r.Blob = &blobRef
 	if _, err := in.Blobs.KeepOriginal(o, typ.Ext); err != nil {
 		return fail(err)
+	}
+
+	if opts.BlobOnly {
+		step(Done)
+		return r
 	}
 
 	facts, err := in.facts(ctx, typ, kind, in.Blobs.BlobPath(strings.TrimPrefix(blobRef, "sha256:"), typ.Ext))

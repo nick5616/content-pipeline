@@ -26,7 +26,21 @@ type API interface {
 	// Write uploads r. Every write is conditional (see WriteOpts.IfGeneration),
 	// which also makes it safe to retry.
 	Write(ctx context.Context, bucket, name string, r io.Reader, o WriteOpts) (Object, error)
+	// Copy copies an object between buckets on the server (no download),
+	// keeping its metadata. Conditional on the destination, like Write.
+	Copy(ctx context.Context, srcBucket, src, dstBucket, dst string, o CopyOpts) (Object, error)
+	// Delete removes an object if it still has generation gen; there is no
+	// unconditional delete.
+	Delete(ctx context.Context, bucket, name string, gen int64) error
 	Close() error
+}
+
+// CopyOpts describe one copy.
+type CopyOpts struct {
+	ContentType  string
+	CacheControl string
+	// IfGeneration is the destination's generation now; 0: must not exist.
+	IfGeneration int64
 }
 
 // Object is an object's metadata as Canon uses it.
@@ -131,6 +145,37 @@ func (c Client) Write(ctx context.Context, bucket, name string, r io.Reader, o W
 		return Object{}, classify(err)
 	}
 	return object(w.Attrs()), nil
+}
+
+func (c Client) Copy(ctx context.Context, srcBucket, src, dstBucket, dst string, o CopyOpts) (Object, error) {
+	cond := storage.Conditions{GenerationMatch: o.IfGeneration}
+	if o.IfGeneration == 0 {
+		cond = storage.Conditions{DoesNotExist: true}
+	}
+	from := c.Bucket(srcBucket).Object(src)
+	attrs, err := from.Attrs(ctx)
+	if err != nil {
+		return Object{}, classify(err)
+	}
+	cp := c.Bucket(dstBucket).Object(dst).If(cond).CopierFrom(from.Generation(attrs.Generation))
+	cp.ContentType = attrs.ContentType
+	if o.ContentType != "" {
+		cp.ContentType = o.ContentType
+	}
+	cp.CacheControl = o.CacheControl
+	cp.Metadata = attrs.Metadata
+	a, err := cp.Run(ctx)
+	if err != nil {
+		return Object{}, classify(err)
+	}
+	return object(a), nil
+}
+
+func (c Client) Delete(ctx context.Context, bucket, name string, gen int64) error {
+	if gen <= 0 {
+		return fmt.Errorf("delete %s/%s: a generation is required", bucket, name)
+	}
+	return classify(c.Bucket(bucket).Object(name).If(storage.Conditions{GenerationMatch: gen}).Delete(ctx))
 }
 
 func object(a *storage.ObjectAttrs) Object {

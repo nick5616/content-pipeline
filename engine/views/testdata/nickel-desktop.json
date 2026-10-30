@@ -1,0 +1,136 @@
+{
+  "entries": [
+    {
+      "category": {
+        "icon": "🤖",
+        "label": "AI Productivity",
+        "slug": "ai-productivity"
+      },
+      "component": null,
+      "date": {
+        "display": "Jun 2025",
+        "label": null,
+        "sortKey": 20250600,
+        "value": "2025-06"
+      },
+      "featured": false,
+      "id": "01JB7Z00000000000000000001",
+      "key": null,
+      "kind": "project",
+      "links": [
+        {
+          "label": null,
+          "rel": "live",
+          "url": "https://rpg-quests.netlify.app/"
+        },
+        {
+          "label": null,
+          "rel": "source",
+          "url": "https://github.com/nick5616/rpg-quests"
+        }
+      ],
+      "mediums": [],
+      "open": {
+        "newTab": true,
+        "route": null,
+        "type": "url",
+        "url": "https://rpg-quests.netlify.app/",
+        "window": null
+      },
+      "order": null,
+      "pinned": null,
+      "slug": "rpg-quests",
+      "status": "operational",
+      "summary": "Write a journal entry and get it back as video game quests.",
+      "tags": [
+        "gamification",
+        "journaling"
+      ],
+      "tech": [
+        "typescript",
+        "react",
+        "llm-apis"
+      ],
+      "title": "RPG Quests",
+      "why": "I wanted journaling to feel more like playing a game."
+    },
+    {
+      "category": null,
+      "component": "tierlistify",
+      "date": {
+        "display": "Sometime in like Nov 2024",
+        "label": "Sometime in like Nov 2024",
+        "sortKey": 20241100,
+        "value": "2024-11"
+      },
+      "featured": false,
+      "id": "01JB7Z00000000000000000002",
+      "key": null,
+      "kind": "project",
+      "links": [
+        {
+          "label": null,
+          "rel": "live",
+          "url": "https://tierlistify.netlify.app/"
+        }
+      ],
+      "mediums": [],
+      "open": {
+        "newTab": false,
+        "route": "/apps/tierlistify",
+        "type": "route",
+        "url": null,
+        "window": {
+          "height": 700,
+          "width": 1000
+        }
+      },
+      "order": null,
+      "pinned": 0,
+      "slug": "tierlistify",
+      "status": null,
+      "summary": "",
+      "tags": [],
+      "tech": [],
+      "title": "Tierlistify",
+      "why": ""
+    }
+  ],
+  "pipelineVersion": "0.5.0",
+  "taxonomy": {
+    "categories": [
+      {
+        "icon": "🤖",
+        "label": "AI Productivity",
+        "slug": "ai-productivity"
+      }
+    ],
+    "mediums": [],
+    "tags": [
+      {
+        "label": "Gamification",
+        "slug": "gamification"
+      },
+      {
+        "label": "Journaling",
+        "slug": "journaling"
+      }
+    ],
+    "tech": [
+      {
+        "label": "TypeScript",
+        "slug": "typescript"
+      },
+      {
+        "label": "React",
+        "slug": "react"
+      },
+      {
+        "label": "LLM APIs",
+        "slug": "llm-apis"
+      }
+    ]
+  },
+  "view": "nickel-desktop",
+  "viewVersion": 1
+}

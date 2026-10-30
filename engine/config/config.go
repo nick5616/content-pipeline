@@ -48,6 +48,10 @@ type Config struct {
 	// PublicCORSOrigins are the site origins allowed to fetch from the public
 	// bucket (D16).
 	PublicCORSOrigins []string `yaml:"publicCorsOrigins"`
+	// PublicBaseURL is where the public bucket is served from, such as a CDN
+	// or your own domain. Empty: https://storage.googleapis.com/<publicBucket>
+	// (D54).
+	PublicBaseURL string `yaml:"publicBaseUrl"`
 
 	CacheDir string `yaml:"cacheDir"`
 	StateDir string `yaml:"stateDir"`
@@ -221,6 +225,16 @@ func (c Config) Validate() []Problem {
 		}
 	}
 
+	if b := c.PublicBaseURL; b != "" {
+		u, err := url.Parse(b)
+		switch {
+		case err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "":
+			add("publicBaseUrl", "%q must be an https URL with no query or fragment", b)
+		case strings.HasSuffix(b, "/"):
+			add("publicBaseUrl", "%q must not end with /", b)
+		}
+	}
+
 	if !filepath.IsAbs(c.CacheDir) {
 		add("cacheDir", "%q must be an absolute path", c.CacheDir)
 	}
@@ -237,6 +251,18 @@ func (c Config) Validate() []Problem {
 		add("serve.port", "%d is outside 1024 to 65535", p)
 	}
 	return ps
+}
+
+// PublicBase is the URL public objects are served under, without a
+// trailing slash, or "" when there is no public bucket.
+func (c Config) PublicBase() string {
+	if c.PublicBaseURL != "" {
+		return c.PublicBaseURL
+	}
+	if c.PublicBucket == "" {
+		return ""
+	}
+	return "https://storage.googleapis.com/" + c.PublicBucket
 }
 
 // checkOrigin returns why o is not a bare origin, or "" if it is fine. Plain

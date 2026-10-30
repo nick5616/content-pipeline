@@ -18,12 +18,12 @@ var (
 	}
 )
 
-// parseDate reads the loose dates in the old bucket's metadata: "10/5/2025"
+// ParseDate reads the loose dates in the old bucket's metadata: "10/5/2025"
 // (Nickel Tools' created), "2024", "July 2025", "Circa December 2024" or
 // "Circa new year 2023". It returns an ISO partial date, plus a label when
 // the text says more than the value does ("Circa 2022" sorts as 2022 but
 // shows as written). ok is false when no year can be found.
-func parseDate(s string) (value, label string, ok bool) {
+func ParseDate(s string) (value, label string, ok bool) {
 	s = strings.TrimSpace(s)
 	if m := usDate.FindStringSubmatch(s); m != nil {
 		mo, _ := strconv.Atoi(m[1])

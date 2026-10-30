@@ -267,3 +267,25 @@ func decodeItem(fields map[string]any) (manifest.Item, error) {
 	}
 	return it, nil
 }
+
+// SetSurface declares or updates a surface in the manifest's surfaces
+// table: body is {id, label, baseUrl?}. Placements can only name declared
+// surfaces, and only registered ones validate.
+func SetSurface(w *store.Working, rev, id string, body []byte) ([]manifest.Surface, string, error) {
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.DisallowUnknownFields()
+	var s manifest.Surface
+	if err := dec.Decode(&s); err != nil {
+		return nil, "", fmt.Errorf("%w: %v", ErrBadRequest, err)
+	}
+	if string(s.ID) != id {
+		return nil, "", fmt.Errorf("%w: body id %q doesn't match %q", ErrBadRequest, s.ID, id)
+	}
+	var out []manifest.Surface
+	newRev, err := w.UpdateIf(rev, func(m *manifest.Manifest) error {
+		m.Surfaces = upsert(m.Surfaces, s, func(x manifest.Surface) bool { return string(x.ID) == id })
+		out = m.Surfaces
+		return nil
+	})
+	return out, newRev, err
+}

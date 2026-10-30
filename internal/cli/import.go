@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nick5616/canon/engine/importbucket"
+	"github.com/nick5616/canon/engine/importts"
 )
 
 func newImport() *cobra.Command {
@@ -19,15 +20,7 @@ func newImport() *cobra.Command {
 		Use:   "import",
 		Short: "Draft items from an existing bucket or content.ts",
 	}
-	cmd.AddCommand(newImportBucket(), &cobra.Command{
-		Use:                "content-ts",
-		Short:              "Import content.ts entries (M7)",
-		DisableFlagParsing: true,
-		Annotations:        map[string]string{"stub": "M7"},
-		RunE: func(*cobra.Command, []string) error {
-			return fmt.Errorf("import content-ts isn't built yet; it lands in M7")
-		},
-	})
+	cmd.AddCommand(newImportBucket(), newImportContentTS())
 	return cmd
 }
 
@@ -175,4 +168,107 @@ func inCollection(r importbucket.Result) string {
 		return ""
 	}
 	return " in " + r.Collection
+}
+
+func newImportContentTS() *cobra.Command {
+	var (
+		tsDir  string
+		asJSON bool
+	)
+	cmd := &cobra.Command{
+		Use:   "content-ts <path to content.ts>",
+		Short: "Draft items from Nickel Tools' content.ts (reads it only; runs nothing)",
+		Long: `Reads content.ts, and taxonomy.ts and profile.ts beside it, statically with
+the TypeScript compiler API (Node required; nothing in them runs), and
+drafts an item per entry with its placements on the desktop, the software,
+UX and art portfolios and the 3D showroom. Thumbnails are downloaded from
+nickeltools.dev and sanitized like any ingest. The art entries merge into
+the collections canon import bucket made.
+
+Everything is a draft: review with canon view <surface> --drafts, then
+publish. Rerunning only adds what's new. The report is saved under the
+state directory as imports/content-ts.json.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := ingestConfig(cmd)
+			if err != nil {
+				return err
+			}
+			in, err := newIngester(cfg)
+			if err != nil {
+				return err
+			}
+			if tsDir == "" {
+				tsDir = findTypeScript(args[0])
+			}
+			src, err := importts.Extract(cmd.Context(), args[0], tsDir)
+			if err != nil {
+				return err
+			}
+			im := &importts.Importer{Working: in.Working, Ingest: in}
+			rep, err := im.Import(cmd.Context(), src, args[0])
+			if err != nil {
+				return explain(cmd.ErrOrStderr(), err)
+			}
+			saved, err := saveJSON(cfg.StateDir, "content-ts.json", rep)
+			if err != nil {
+				return err
+			}
+			out := cmd.OutOrStdout()
+			if asJSON {
+				return printJSON(out, rep)
+			}
+			tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+			counts := map[importts.Status]int{}
+			for _, r := range rep.Results {
+				counts[r.Status]++
+				vis := ""
+				if !r.Visible {
+					vis = " (hidden)"
+				}
+				fmt.Fprintf(tw, "%s\t%s\t%s%s\t%s\n", r.Status, r.Entry, r.Slug, vis, r.Note)
+				for _, w := range r.Warnings {
+					fmt.Fprintf(tw, "  !\t\t%s\n", w)
+				}
+			}
+			tw.Flush()
+			fmt.Fprintf(out, "\n%d imported, %d merged, %d already there, %d skipped. Report: %s\nAll drafts: review with canon view <surface> --drafts.\n",
+				counts[importts.Imported], counts[importts.Merged], counts[importts.Existing], counts[importts.Skipped], saved)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&tsDir, "typescript", "", "a directory whose node_modules has typescript (default: the site's own, found above content.ts)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "print the report as JSON")
+	return cmd
+}
+
+// findTypeScript looks above path for a node_modules/typescript.
+func findTypeScript(path string) string {
+	dir, _ := filepath.Abs(filepath.Dir(path))
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "node_modules", "typescript")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return filepath.Dir(path)
+		}
+		dir = parent
+	}
+}
+
+func saveJSON(stateDir, name string, v any) (string, error) {
+	dir := filepath.Join(stateDir, "imports")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	p := filepath.Join(dir, name)
+	if err := os.WriteFile(p+".tmp", append(b, '\n'), 0o644); err != nil {
+		return "", err
+	}
+	return p, os.Rename(p+".tmp", p)
 }

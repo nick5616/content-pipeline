@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nick5616/canon/engine/manifest"
 	"github.com/nick5616/canon/engine/media"
 )
 
@@ -18,8 +19,9 @@ import (
 // inspect views (2048, 3200). Never upscaled (D47).
 var thumbWidths = []int{320, 800, 1600, 2048, 3200}
 
+// v2: receipts record each size's width and height (views need both).
 var thumb = Recipe{
-	Name: "thumb", Version: 1,
+	Name: "thumb", Version: 2,
 	Params:  map[string]any{"widths": thumbWidths, "quality": 80, "format": "webp"},
 	Applies: isImage,
 	Run: func(ctx context.Context, t Tools, s Source, scratch string) (Result, error) {
@@ -43,9 +45,13 @@ var lqip = Recipe{
 
 var palette = Recipe{
 	Name: "palette", Version: 1,
-	Params:  map[string]any{"colors": 5, "sample": 64},
-	Applies: func(s Source) bool { return isImage(s) && s.FirstImage },
-	Facts:   []string{"palette"},
+	Params: map[string]any{"colors": 5, "sample": 64},
+	// Art and photos only (design doc): a project's thumbnail has no
+	// palette fact to fill.
+	Applies: func(s Source) bool {
+		return isImage(s) && s.FirstImage && (s.Kind == manifest.KindArtwork || s.Kind == manifest.KindPhoto)
+	},
+	Facts: []string{"palette"},
 	Run: func(ctx context.Context, t Tools, s Source, scratch string) (Result, error) {
 		small := filepath.Join(scratch, "sample.png")
 		if _, err := resize(ctx, t, s.Path, small, 64, 0); err != nil {

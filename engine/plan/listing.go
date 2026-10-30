@@ -23,6 +23,9 @@ type Listing struct {
 	History map[string]bool
 	// Derived holds derived/<jobkey>/<file> objects, by jobkey then file.
 	Derived map[string]map[string]gcs.Object
+	// Public is every object in the public bucket, by name; nil when no
+	// public bucket is configured.
+	Public map[string]gcs.Object
 }
 
 const (

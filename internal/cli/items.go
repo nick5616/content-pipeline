@@ -252,6 +252,40 @@ func newTaxonomy() *cobra.Command {
 	return cmd
 }
 
+func newSurface() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "surface",
+		Short: "Declare the surfaces items can be placed on (canon view lists them)",
+	}
+	cmd.AddCommand(&cobra.Command{
+		Use:   "set <id> label=... [baseUrl=...]",
+		Short: "Declare or update one surface",
+		Long: `Adds a surface to the working manifest's surfaces table, or updates its
+label and base URL. Only registered surfaces (those with schemas) are
+accepted: nickel-desktop, software-portfolio, design-portfolio,
+art-portfolio, holodeck-showroom, holodeck-art-room, holodeck-dj-room.`,
+		Args: cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			e, err := engineFor(cmd)
+			if err != nil {
+				return err
+			}
+			fields, err := assignments(args[1:])
+			if err != nil {
+				return err
+			}
+			fields["id"] = args[0]
+			body, _ := json.Marshal(fields)
+			if _, _, err := items.SetSurface(e.Working, "", args[0], body); err != nil {
+				return explain(cmd.ErrOrStderr(), err)
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "saved surface %s\n", args[0])
+			return nil
+		},
+	})
+	return cmd
+}
+
 // explain prints validation problems one per line before the error.
 func explain(w io.Writer, err error) error {
 	if ps := problemsOf(err); len(ps) > 0 {

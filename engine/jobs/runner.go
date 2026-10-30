@@ -377,7 +377,10 @@ func (r *Runner) fill(facts map[manifest.Ulid]map[string]any, owned map[manifest
 		}
 		return nil
 	})
-	return n, err
+	if err != nil {
+		return 0, err // nothing was written
+	}
+	return n, nil
 }
 
 func needsFill(m *manifest.Manifest, facts map[manifest.Ulid]map[string]any, refresh bool) bool {
