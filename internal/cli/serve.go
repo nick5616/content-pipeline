@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nick5616/canon/api"
+	"github.com/nick5616/canon/engine/doctor"
 	"github.com/nick5616/canon/ui"
 )
 
@@ -27,9 +28,9 @@ func newServe() *cobra.Command {
 		Short: "Run the local UI and API on 127.0.0.1",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, path, err := loadConfig(cmd)
-			if err != nil && !errors.Is(err, fs.ErrNotExist) {
-				return err
+			cfg, path, loadErr := loadConfig(cmd)
+			if loadErr != nil && !errors.Is(loadErr, fs.ErrNotExist) {
+				return loadErr
 			}
 			if cmd.Flags().Changed("port") {
 				cfg.Serve.Port = port
@@ -54,6 +55,9 @@ func newServe() *cobra.Command {
 			eng, err := newEngine(cfg)
 			if err != nil {
 				return err
+			}
+			eng.Doctor = func(ctx context.Context) doctor.Report {
+				return doctor.Run(ctx, doctor.NewEnv(cfg, path, loadErr))
 			}
 			srv := &http.Server{
 				Handler:           api.NewServer(cfg, token, ui.Dist, api.WithIngester(in), api.WithEngine(eng)),

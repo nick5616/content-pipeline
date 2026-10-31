@@ -24,7 +24,8 @@ type batch struct {
 type ingestAPI struct {
 	in *ingest.Ingester
 	// after runs once a batch is processed (derived jobs, D45).
-	after func()
+	after  func()
+	events *hub
 
 	mu      sync.Mutex
 	batches map[string]*batch
@@ -133,7 +134,9 @@ func (a *ingestAPI) get(w http.ResponseWriter, r *http.Request) {
 func (a *ingestAPI) set(b *batch, i int, fr ingest.FileResult) {
 	a.mu.Lock()
 	b.Files[i] = fr
+	snap := a.copyLocked(b)
 	a.mu.Unlock()
+	a.events.publish(Event{Type: "ingest", ID: b.ID, Data: snap})
 }
 
 func (a *ingestAPI) copyLocked(b *batch) batch {

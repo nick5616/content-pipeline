@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: Canon local API
-  version: 1.4.0
+  version: 1.5.0
   description: |
     The API behind `canon serve`, on 127.0.0.1 only. Every request needs
     `Authorization: Bearer <token>`, where the token is the one `canon serve`
@@ -14,7 +14,7 @@ info:
     moved.
 
     Frozen at the end of M1; changes since are additive only (1.1.0: D33,
-    1.2.0: D39, 1.3.0: D50, 1.4.0: D58). Handlers land in M3 to M6; `GET /api/health` exists from M0.
+    1.2.0: D39, 1.3.0: D50, 1.4.0: D58, 1.5.0: D65). Handlers land in M3 to M6; `GET /api/health` exists from M0.
 
     Every operation has a CLI twin (`x-cli`), so nothing is UI-only:
 
@@ -27,14 +27,14 @@ info:
     | getItem | `canon show` |
     | createItem, updateItem, deleteItem | `canon item new`, `canon item set`, `canon item rm` |
     | getTaxonomy, putTaxonomyTerm | `canon taxonomy ls`, `canon taxonomy set` |
-    | listSurfaces, previewSurface | `canon view`, `canon view <surface>` |
+    | listSurfaces, previewSurface, getSurfaceChanges | `canon view`, `canon view <surface>` |
     | putSurface | `canon surface set` |
     | startIngest, getIngest | `canon ingest <paths>` |
     | createPlan, getPlan, applyPlan, getApplyStatus | `canon plan -o`, `canon plan show`, `canon apply` |
     | listJobs, retryJob | `canon jobs`, `canon jobs retry` |
     | runJobs, getJobRun | `canon jobs run` |
     | getEvents | `--watch` flags (`canon jobs --watch`) |
-    | getLocalBlob, getLocalDerived | none: read-only view of the local cache for offline thumbnails |
+    | getLocalBlob, getLocalDerived, getLocalThumbnail | none: read-only view of the local cache for offline thumbnails |
 servers:
   - url: http://127.0.0.1:4747
 security:
@@ -70,6 +70,11 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DoctorReport" }
+        "503":
+          description: This server wasn't started by canon serve, so there's nothing to check.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   /api/sync/status:
@@ -324,6 +329,24 @@ paths:
         "422": { $ref: "#/components/responses/Invalid" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /api/surfaces/{id}/changes:
+    get:
+      operationId: getSurfaceChanges
+      x-cli: canon view
+      summary: What the next apply changes in this surface's view, against the live one
+      description: The preview (previewSurface) compared entry by entry with views/<id>.json in the public bucket. Entries match by id and placement key.
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: "../schema/common.schema.json#/$defs/slug" } }
+      responses:
+        "200":
+          description: The changes.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SurfaceChanges" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/Offline" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /api/ingest:
     post:
       operationId: startIngest
@@ -515,9 +538,33 @@ paths:
         - { name: sha256, in: path, required: true, schema: { type: string, pattern: "^[0-9a-f]{64}$" } }
       responses:
         "200":
-          description: The bytes, with the type detected at ingest.
+          description: The bytes, with the type detected at ingest. Served with their real media type (image/webp, audio/mpeg, ...), so the UI can show them.
           content:
-            application/octet-stream:
+            image/*:
+              schema: { type: string, contentMediaType: application/octet-stream }
+            audio/*:
+              schema: { type: string, contentMediaType: application/octet-stream }
+            video/*:
+              schema: { type: string, contentMediaType: application/octet-stream }
+            application/*:
+              schema: { type: string, contentMediaType: application/octet-stream }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/local/thumbnails/{sha256}:
+    get:
+      operationId: getLocalThumbnail
+      x-cli: none
+      summary: An image blob's thumbnail from the local cache
+      description: The smallest thumb size at least w pixels wide (else the largest), WebP. 404 until the thumb job has run here.
+      parameters:
+        - { name: sha256, in: path, required: true, schema: { type: string, pattern: "^[0-9a-f]{64}$" } }
+        - { name: w, in: query, schema: { type: integer, minimum: 1, maximum: 4000, default: 320 } }
+      responses:
+        "200":
+          description: The WebP.
+          content:
+            image/*:
               schema: { type: string, contentMediaType: application/octet-stream }
         "404": { $ref: "#/components/responses/NotFound" }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -532,9 +579,15 @@ paths:
         - { name: file, in: path, required: true, schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,128}$" } }
       responses:
         "200":
-          description: The bytes.
+          description: The bytes. Served with their real media type (image/webp, audio/mpeg, ...), so the UI can show them.
           content:
-            application/octet-stream:
+            image/*:
+              schema: { type: string, contentMediaType: application/octet-stream }
+            audio/*:
+              schema: { type: string, contentMediaType: application/octet-stream }
+            video/*:
+              schema: { type: string, contentMediaType: application/octet-stream }
+            application/*:
               schema: { type: string, contentMediaType: application/octet-stream }
         "404": { $ref: "#/components/responses/NotFound" }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -716,6 +769,29 @@ components:
         viewVersion: { type: [integer, "null"] }
         placements: { type: integer, minimum: 0, description: Visible placements on this surface. }
       required: [id, label, baseUrl, registered, viewVersion, placements]
+      additionalProperties: false
+
+    SurfaceChanges:
+      type: object
+      properties:
+        surface: { type: string }
+        live: { type: boolean, description: "Whether the public bucket has this view yet." }
+        added: { type: array, items: { $ref: "#/components/schemas/EntryRef" } }
+        removed: { type: array, items: { $ref: "#/components/schemas/EntryRef" } }
+        changed: { type: array, items: { $ref: "#/components/schemas/EntryRef" } }
+        header: { type: boolean, description: "Whether anything outside the entries changed (profile, taxonomy, filters, tracks...)." }
+      required: [surface, live, added, removed, changed, header]
+      additionalProperties: false
+
+    EntryRef:
+      type: object
+      properties:
+        id: { type: string }
+        key: { type: [string, "null"] }
+        slug: { type: string }
+        title: { type: string }
+        fields: { type: array, items: { type: string }, description: "For changed entries: the top-level fields that differ." }
+      required: [id, key, slug, title]
       additionalProperties: false
 
     AnyView:

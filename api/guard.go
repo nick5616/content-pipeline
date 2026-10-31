@@ -8,7 +8,10 @@ import (
 )
 
 // csp allows only same-origin resources. The built UI has no inline scripts.
-const csp = "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; object-src 'none'"
+// img-src adds blob: (local images are fetched with the bearer token and
+// shown through object URLs) and data: (lqip placeholders in views); media
+// sources still come only from this server.
+const csp = "default-src 'self'; img-src 'self' blob: data:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; object-src 'none'"
 
 // guard protects a server that only this machine's browser should reach:
 //

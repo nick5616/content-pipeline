@@ -14,6 +14,7 @@ import (
 	"github.com/nick5616/canon/engine/blobstore"
 	"github.com/nick5616/canon/engine/config"
 	"github.com/nick5616/canon/engine/derived"
+	"github.com/nick5616/canon/engine/doctor"
 	"github.com/nick5616/canon/engine/gcs"
 	"github.com/nick5616/canon/engine/items"
 	"github.com/nick5616/canon/engine/jobs"
@@ -40,6 +41,8 @@ type Engine struct {
 	Tools   recipes.Tools
 	// OnJobs, if set, sees the report of the jobs plan runs first.
 	OnJobs func(jobs.Report)
+	// Doctor runs canon doctor's checks (GET /api/doctor).
+	Doctor func(context.Context) doctor.Report
 }
 
 // WithEngine enables the sync, item, taxonomy and plan endpoints.
@@ -80,7 +83,8 @@ func (e *Engine) Deps(ctx context.Context) (apply.Deps, error) {
 }
 
 type engineAPI struct {
-	e *Engine
+	e      *Engine
+	events *hub
 
 	mu      sync.Mutex
 	applies map[string]apply.Status
@@ -96,18 +100,30 @@ func (a *engineAPI) routes(mux *http.ServeMux) {
 			f(w, r)
 		}
 	}
+	// Writes tell every event stream the sync state moved.
+	wr := func(f http.HandlerFunc) http.HandlerFunc {
+		return h(func(w http.ResponseWriter, r *http.Request) {
+			f(w, r)
+			go a.publishSync(context.Background())
+		})
+	}
 	mux.HandleFunc("GET /api/sync/status", h(a.syncStatus))
-	mux.HandleFunc("POST /api/sync/pull", h(a.pull))
+	mux.HandleFunc("POST /api/sync/pull", wr(a.pull))
 	mux.HandleFunc("GET /api/items", h(a.listItems))
-	mux.HandleFunc("POST /api/items", h(a.createItem))
+	mux.HandleFunc("POST /api/items", wr(a.createItem))
 	mux.HandleFunc("GET /api/items/{id}", h(a.getItem))
-	mux.HandleFunc("PATCH /api/items/{id}", h(a.updateItem))
-	mux.HandleFunc("DELETE /api/items/{id}", h(a.deleteItem))
+	mux.HandleFunc("PATCH /api/items/{id}", wr(a.updateItem))
+	mux.HandleFunc("DELETE /api/items/{id}", wr(a.deleteItem))
 	mux.HandleFunc("GET /api/taxonomy", h(a.getTaxonomy))
+	mux.HandleFunc("PUT /api/taxonomy/{vocab}/{slug}", wr(a.putTerm))
 	mux.HandleFunc("GET /api/surfaces", h(a.listSurfaces))
 	mux.HandleFunc("GET /api/surfaces/{id}/preview", h(a.previewSurface))
-	mux.HandleFunc("PUT /api/surfaces/{id}", h(a.putSurface))
-	mux.HandleFunc("PUT /api/taxonomy/{vocab}/{slug}", h(a.putTerm))
+	mux.HandleFunc("GET /api/surfaces/{id}/changes", h(a.surfaceChanges))
+	mux.HandleFunc("PUT /api/surfaces/{id}", wr(a.putSurface))
+	mux.HandleFunc("GET /api/local/blobs/{sha256}", h(a.localBlob))
+	mux.HandleFunc("GET /api/local/derived/{jobkey}/{file}", h(a.localDerived))
+	mux.HandleFunc("GET /api/local/thumbnails/{sha256}", h(a.localThumbnail))
+	mux.HandleFunc("GET /api/doctor", h(a.getDoctor))
 	mux.HandleFunc("POST /api/plans", h(a.createPlan))
 	mux.HandleFunc("GET /api/plans/{id}", h(a.getPlan))
 	mux.HandleFunc("POST /api/plans/{id}/apply", h(a.applyPlan))
@@ -364,6 +380,10 @@ func (a *engineAPI) applyPlan(w http.ResponseWriter, r *http.Request) {
 			a.mu.Lock()
 			a.applies[p.ID] = s
 			a.mu.Unlock()
+			a.events.publish(Event{Type: "apply", ID: p.ID, Data: s})
+			if s.State != "running" {
+				a.publishSync(context.Background())
+			}
 			once.Do(func() { first <- s })
 		})
 		result <- err
@@ -394,4 +414,21 @@ func problemWith(w http.ResponseWriter, status int, title, detail string, ps []m
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(status)
 	writeBody(w, map[string]any{"type": "about:blank", "title": title, "status": status, "detail": detail, "problems": ps})
+}
+
+// publishSync sends the sync state to every event stream. Without buckets
+// (or offline) there is no remote to compare with, so nothing is sent.
+func (a *engineAPI) publishSync(ctx context.Context) {
+	if a.events == nil {
+		return
+	}
+	rem, err := a.e.remote(ctx)
+	if err != nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	if st, err := a.e.Working.Status(ctx, rem); err == nil {
+		a.events.publish(Event{Type: "sync", ID: "sync", Data: toSync(st)})
+	}
 }

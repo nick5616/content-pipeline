@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 // In dev, Vite serves the UI on :5173 and proxies /api to `canon serve`.
@@ -11,5 +11,8 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: { "/api": { target: "http://127.0.0.1:4747", changeOrigin: true } },
+    // The placement forms import ../schema/surfaces/*/placement.schema.json.
+    fs: { allow: [".."] },
   },
+  test: { environment: "jsdom", setupFiles: ["./src/test/setup.ts"] },
 });

@@ -49,6 +49,7 @@ func importer(t *testing.T) *Importer {
 	gen := ids.NewWith(func() time.Time { return time.Date(2026, 10, 30, 0, 0, 0, 0, time.UTC) }, rand.New(rand.NewSource(1)))
 	// A paintings collection, as canon import bucket would have made it.
 	if _, err := w.Update(func(m *manifest.Manifest) error {
+		m.Surfaces = []manifest.Surface{{ID: "holodeck-art-room", Label: "Art Room"}}
 		m.Items = append(m.Items, manifest.Item{ID: manifest.Ulid(gen.New().String()), Slug: "paintings",
 			Kind: manifest.KindCollection, Visibility: manifest.ItemVisibilityPublic, Title: "Paintings"})
 		return nil
@@ -137,6 +138,9 @@ func TestImport(t *testing.T) {
 	if c := world.Copy["software-portfolio"]; c.Title == nil || *c.Title != "World (software)" || *c.Summary != "Software words." {
 		t.Errorf("copy: %+v", world.Copy)
 	}
+	if c := world.Copy["holodeck-showroom"]; c.Title == nil || *c.Title != "World (software)" {
+		t.Errorf("the showroom should get the software page's copy: %+v", world.Copy)
+	}
 	if p := placement(world, "software-portfolio"); p == nil || p.Config["preview"].(map[string]any)["kind"] != "laser-room" {
 		t.Errorf("world preview: %+v", p)
 	}
@@ -164,7 +168,7 @@ func TestImport(t *testing.T) {
 	}
 
 	toy := placement(items["toy"], "nickel-desktop")
-	if toy.Config["route"] != "/toy" || toy.Config["open"] != "in-window" || toy.Config["pinned"] != true ||
+	if toy.Config["route"] != "/toy" || toy.Config["open"] != "in-window" || toy.Config["pinned"] != float64(0) ||
 		toy.Config["component"] != "batch-analyzer" {
 		t.Errorf("toy desktop: %v", toy.Config)
 	}
@@ -185,9 +189,12 @@ func TestImport(t *testing.T) {
 	}
 
 	p := items["paintings"]
-	if len(p.Aliases) != 1 || *p.Summary != "Paintings, for the art page." || placement(p, "art-portfolio").Config["section"] != "collections" ||
+	if len(p.Aliases) != 1 || *p.Summary != "Paint." || *p.Category != "art" || placement(p, "art-portfolio").Config["section"] != "collections" ||
 		placement(p, "nickel-desktop").Config["route"] != "/art-gallery/paintings" {
 		t.Errorf("paintings: %+v", p)
+	}
+	if c := p.Copy["holodeck-art-room"]; c.Title == nil || *c.Title != "Paintings Gallery" || *c.Summary != "Paintings, for the art page." || p.Title != "Paintings" {
+		t.Errorf("the art page's hall title should be the art room's placard: %+v", p.Copy)
 	}
 
 	m, rev, _, _ := im.Working.Load()
@@ -197,6 +204,9 @@ func TestImport(t *testing.T) {
 	var cats []string
 	for _, c := range m.Taxonomy.Categories {
 		cats = append(cats, string(c.Slug))
+		if c.Slug == "social" && (c.Icon == nil || *c.Icon != "👥") {
+			t.Errorf("social's icon should be Social Tools' 👥 every run: %v", c.Icon)
+		}
 	}
 	if strings.Contains(strings.Join(cats, ","), "games,") || !strings.Contains(strings.Join(cats, ","), "social") {
 		t.Errorf("categories: %v", cats)

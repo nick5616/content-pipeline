@@ -6,6 +6,7 @@ import (
 
 	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/manifest"
+	"github.com/nick5616/canon/internal/testenv"
 )
 
 func TestSurfacesAPI(t *testing.T) {
@@ -57,4 +58,42 @@ func TestPutSurfaceAPI(t *testing.T) {
 	}
 	x.call("PUT", "/api/surfaces/someday", `{"id":"someday","label":"Nope"}`, match(h.Get("ETag")), 422, nil)
 	x.call("PUT", "/api/surfaces/holodeck-dj-room", `{"id":"holodeck-dj-room","label":"DJ"}`, match(rev), 412, nil)
+}
+
+// Changes against the live view: nothing published yet, then publish, then
+// edit a title.
+func TestSurfaceChangesAPI(t *testing.T) {
+	x := newEngineHarness(t, "png.png")
+	x.env.WithPublic()
+	x.e.Derived, x.e.Jobs = x.env.Derived, x.env.Jobs
+	x.e.Config.PublicBucket = testenv.Public
+	if _, err := x.env.Working.Update(func(m *manifest.Manifest) error {
+		m.Surfaces = []manifest.Surface{{ID: "art-portfolio", Label: "Art"}}
+		m.Items[0].Visibility = manifest.ItemVisibilityPublic
+		m.Items[0].Placements = []manifest.Placement{{Surface: "art-portfolio", Config: manifest.PlacementConfig{"section": "primary"}}}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := x.env.Runner().Run(t.Context(), jobs.Options{}); err != nil {
+		t.Fatal(err)
+	}
+	var ch SurfaceChanges
+	x.call("GET", "/api/surfaces/art-portfolio/changes", "", nil, 200, &ch)
+	if ch.Live || len(ch.Added) != 1 {
+		t.Fatalf("before publishing: %+v", ch)
+	}
+	x.env.Converge()
+	x.call("GET", "/api/surfaces/art-portfolio/changes", "", nil, 200, &ch)
+	if !ch.Live || len(ch.Added)+len(ch.Changed)+len(ch.Removed) != 0 || ch.Header {
+		t.Fatalf("after publishing: %+v", ch)
+	}
+	if _, err := x.env.Working.Update(func(m *manifest.Manifest) error { m.Items[0].Title = "Renamed"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	x.call("GET", "/api/surfaces/art-portfolio/changes", "", nil, 200, &ch)
+	if len(ch.Changed) != 1 || ch.Changed[0].Title != "Renamed" || ch.Changed[0].Fields[0] != "title" {
+		t.Fatalf("after an edit: %+v", ch)
+	}
+	x.call("GET", "/api/surfaces/nope/changes", "", nil, 404, nil)
 }

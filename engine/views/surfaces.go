@@ -160,7 +160,7 @@ type desktopWindow struct {
 
 func desktop(c *ctx) any {
 	var es []desktopEntry
-	var pinned []int
+	dock := map[int]float64{} // index in es -> dock key
 	for _, p := range c.placements() {
 		var open desktopOpen
 		if r := cfgString(p.pl, "route"); r != "" {
@@ -181,28 +181,42 @@ func desktop(c *ctx) any {
 			s := string(*rd.Component)
 			e.Component = &s
 		}
-		if cfgBool(p.pl, "pinned") {
-			pinned = append(pinned, len(es))
+		// pinned: a dock position (D62), or true for "after the positioned
+		// ones, in entry order".
+		switch v := p.pl.Config["pinned"].(type) {
+		case bool:
+			if v {
+				dock[len(es)] = 1e9
+			}
+		case float64:
+			dock[len(es)] = v
+		case int:
+			dock[len(es)] = float64(v)
 		}
 		es = append(es, e)
 	}
-	isPinned := map[*desktopEntry]bool{}
-	for _, i := range pinned {
-		isPinned[&es[i]] = true
-	}
 	ptrs := make([]*desktopEntry, len(es))
+	keyOf := map[*desktopEntry]float64{}
 	for i := range es {
 		ptrs[i] = &es[i]
+		if k, ok := dock[i]; ok {
+			keyOf[&es[i]] = k
+		}
 	}
 	sortEntries(ptrs, func(e *desktopEntry) *Entry { return &e.Entry })
-	out := make([]desktopEntry, 0, len(es))
-	n := 0
+	var docked []*desktopEntry
 	for _, e := range ptrs {
-		if isPinned[e] {
-			pos := n
-			e.Pinned = &pos
-			n++
+		if _, ok := keyOf[e]; ok {
+			docked = append(docked, e)
 		}
+	}
+	sort.SliceStable(docked, func(i, j int) bool { return keyOf[docked[i]] < keyOf[docked[j]] })
+	for n, e := range docked {
+		pos := n
+		e.Pinned = &pos
+	}
+	out := make([]desktopEntry, 0, len(es))
+	for _, e := range ptrs {
 		out = append(out, *e)
 	}
 	return desktopView{Header: c.header(), Entries: out}

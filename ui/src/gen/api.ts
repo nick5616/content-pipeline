@@ -209,6 +209,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/surfaces/{id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the next apply changes in this surface's view, against the live one
+         * @description The preview (previewSurface) compared entry by entry with views/<id>.json in the public bucket. Entries match by id and placement key.
+         */
+        get: operations["getSurfaceChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ingest": {
         parameters: {
             query?: never;
@@ -378,6 +398,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/local/thumbnails/{sha256}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * An image blob's thumbnail from the local cache
+         * @description The smallest thumb size at least w pixels wide (else the largest), WebP. 404 until the thumb job has run here.
+         */
+        get: operations["getLocalThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/local/derived/{jobkey}/{file}": {
         parameters: {
             query?: never;
@@ -475,6 +515,24 @@ export interface components {
             viewVersion: number | null;
             /** @description Visible placements on this surface. */
             placements: number;
+        };
+        SurfaceChanges: {
+            surface: string;
+            /** @description Whether the public bucket has this view yet. */
+            live: boolean;
+            added: components["schemas"]["EntryRef"][];
+            removed: components["schemas"]["EntryRef"][];
+            changed: components["schemas"]["EntryRef"][];
+            /** @description Whether anything outside the entries changed (profile, taxonomy, filters, tracks...). */
+            header: boolean;
+        };
+        EntryRef: {
+            id: string;
+            key: string | null;
+            slug: string;
+            title: string;
+            /** @description For changed entries: the top-level fields that differ. */
+            fields?: string[];
         };
         AnyView: components["schemas"]["view.schema"] | components["schemas"]["view.schema-2"] | components["schemas"]["view.schema-3"] | components["schemas"]["view.schema-4"] | components["schemas"]["view.schema-5"] | components["schemas"]["view.schema-6"] | components["schemas"]["view.schema-7"];
         IngestBatch: {
@@ -1282,6 +1340,15 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            /** @description This server wasn't started by canon serve, so there's nothing to check. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     getSyncStatus: {
@@ -1619,6 +1686,31 @@ export interface operations {
             422: components["responses"]["Invalid"];
         };
     };
+    getSurfaceChanges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["schemas"]["slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The changes. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurfaceChanges"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["Offline"];
+        };
+    };
     startIngest: {
         parameters: {
             query?: never;
@@ -1880,13 +1972,42 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The bytes, with the type detected at ingest. */
+            /** @description The bytes, with the type detected at ingest. Served with their real media type (image/webp, audio/mpeg, ...), so the UI can show them. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/octet-stream": string;
+                    "image/*": string;
+                    "audio/*": string;
+                    "video/*": string;
+                    "application/*": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getLocalThumbnail: {
+        parameters: {
+            query?: {
+                w?: number;
+            };
+            header?: never;
+            path: {
+                sha256: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The WebP. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -1905,13 +2026,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The bytes. */
+            /** @description The bytes. Served with their real media type (image/webp, audio/mpeg, ...), so the UI can show them. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/octet-stream": string;
+                    "image/*": string;
+                    "audio/*": string;
+                    "video/*": string;
+                    "application/*": string;
                 };
             };
             401: components["responses"]["Unauthorized"];

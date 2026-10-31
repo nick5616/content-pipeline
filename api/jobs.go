@@ -68,7 +68,8 @@ type jobRun struct {
 }
 
 type jobsAPI struct {
-	e *Engine
+	e      *Engine
+	events *hub
 
 	mu  sync.Mutex
 	run *jobRun
@@ -83,8 +84,10 @@ func (a *jobsAPI) start(o jobs.Options) bool {
 		return false
 	}
 	a.run = &jobRun{State: "running"}
+	o.Progress = func(j jobs.Job) { a.events.publish(Event{Type: "job", ID: j.Jobkey, Data: j}) }
 	go func() {
 		rep, err := a.e.Runner().Run(context.Background(), o)
+		defer a.events.publish(Event{Type: "job", ID: "run", Data: a.status()})
 		a.mu.Lock()
 		defer a.mu.Unlock()
 		a.run.Report = &rep

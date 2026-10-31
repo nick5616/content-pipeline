@@ -88,7 +88,7 @@ export const NICKEL_SYSTEM = {
       mediums: ["Digital"],
       surfaces: ["desktop", "art"],
       portfolioOnly: { artGrouping: "collection" },
-      artOverride: { description: "Paintings, for the art page." },
+      artOverride: { title: "Paintings Gallery", description: "Paintings, for the art page." },
     },
     { id: "about", hide: false, title: "About", description: "x", route: "/about", category: "Engineering", surfaces: ["desktop"] },
   ],

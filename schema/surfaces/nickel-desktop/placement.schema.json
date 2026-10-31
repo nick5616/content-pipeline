@@ -3,19 +3,54 @@
   "title": "NickelDesktopPlacement",
   "type": "object",
   "properties": {
-    "route": { "description": "Internal app route. Without one, the icon opens the item's live link.", "type": "string", "pattern": "^/[A-Za-z0-9/_-]*$" },
-    "open": { "type": "string", "enum": ["new-tab", "in-window"] },
+    "route": {
+      "description": "Internal app route. Without one, the icon opens the item's live link.",
+      "type": "string",
+      "pattern": "^/[A-Za-z0-9/_-]*$"
+    },
+    "open": {
+      "type": "string",
+      "enum": [
+        "new-tab",
+        "in-window"
+      ]
+    },
     "window": {
       "type": "object",
       "properties": {
-        "width": { "type": "integer", "minimum": 200, "maximum": 4000 },
-        "height": { "type": "integer", "minimum": 200, "maximum": 4000 }
+        "width": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 4000
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 4000
+        }
       },
       "additionalProperties": false
     },
-    "pinned": { "description": "Show in the dock.", "type": "boolean" },
-    "component": { "description": "Rich description key the desktop maps to a React component, e.g. batch-analyzer.", "$ref": "../../common.schema.json#/$defs/slug" }
+    "pinned": {
+      "description": "Show in the dock: true, or the dock position (0 first). Positioned icons come first, in position order; true ones follow in entry order (D62).",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        }
+      ]
+    },
+    "component": {
+      "description": "Rich description key the desktop maps to a React component, e.g. batch-analyzer.",
+      "$ref": "../../common.schema.json#/$defs/slug"
+    }
   },
-  "required": ["open"],
+  "required": [
+    "open"
+  ],
   "additionalProperties": false
 }

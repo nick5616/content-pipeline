@@ -2,6 +2,7 @@ package views_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"os"
 	"path/filepath"
@@ -176,5 +177,43 @@ func TestResolveDate(t *testing.T) {
 		if d.Display != c.display || d.SortKey != c.key {
 			t.Errorf("%s: %+v", c.v, d)
 		}
+	}
+}
+
+// D62: dock positions order the dock; true ones follow in entry order.
+func TestDockPositions(t *testing.T) {
+	m := full(t)
+	for i := range m.Items {
+		for j := range m.Items[i].Placements {
+			pl := &m.Items[i].Placements[j]
+			if pl.Surface != "nickel-desktop" {
+				continue
+			}
+			switch m.Items[i].Slug {
+			case "rpg-quests":
+				pl.Config["pinned"] = float64(0)
+			case "tierlistify":
+				pl.Config["pinned"] = true
+			}
+		}
+	}
+	_, b := resolve(t, m, "nickel-desktop", fakeMedia{})
+	var v struct {
+		Entries []struct {
+			Slug   string
+			Pinned *int
+		}
+	}
+	if err := json.Unmarshal(b, &v); err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]int{}
+	for _, e := range v.Entries {
+		if e.Pinned != nil {
+			got[e.Slug] = *e.Pinned
+		}
+	}
+	if got["rpg-quests"] != 0 || got["tierlistify"] != 1 || len(got) != 2 {
+		t.Errorf("dock: %v", got)
 	}
 }

@@ -439,7 +439,7 @@ func (im *Importer) placements(e Entry, order map[string]map[string]int, src *So
 		pl := manifest.Placement{Surface: manifest.Slug(id), Order: &o, Config: manifest.PlacementConfig{}}
 		switch s {
 		case "desktop":
-			im.desktop(&pl, e, featured >= 0)
+			im.desktop(&pl, e, featured)
 		case "software", "design":
 			if pv := preview(e, r); pv != nil {
 				pl.Config["preview"] = pv
@@ -459,7 +459,7 @@ func (im *Importer) placements(e Entry, order map[string]map[string]int, src *So
 	return out
 }
 
-func (im *Importer) desktop(pl *manifest.Placement, e Entry, pinned bool) {
+func (im *Importer) desktop(pl *manifest.Placement, e Entry, dock int) {
 	d := e.DesktopOnly
 	// Internal apps open in a window; links in a new tab unless the entry
 	// says otherwise (content.ts's default).
@@ -493,8 +493,8 @@ func (im *Importer) desktop(pl *manifest.Placement, e Entry, pinned bool) {
 			pl.Copy = &manifest.CopyFields{Title: &t}
 		}
 	}
-	if pinned {
-		pl.Config["pinned"] = true
+	if dock >= 0 {
+		pl.Config["pinned"] = dock // content.ts's featured order is the dock's (D62)
 	}
 }
 
@@ -598,6 +598,11 @@ func (im *Importer) copy(e Entry, r *Result) manifest.ItemCopy {
 		}
 		if cf != (manifest.CopyFields{}) {
 			out[id] = cf
+			// The showroom is the software page's list (the 3D site's
+			// sync applied softwareOverride), so it gets the same words.
+			if id == "software-portfolio" {
+				out["holodeck-showroom"] = cf
+			}
 		}
 	}
 	if len(out) == 0 {
@@ -648,13 +653,13 @@ func (im *Importer) mergeCollection(m *manifest.Manifest, e Entry, order map[str
 	}
 	it.Aliases = append(it.Aliases, manifest.Slug(e.ID))
 	if it.Summary == nil {
-		cp := e.Description
-		if d, ok := e.Overrides["art"]["description"]; ok {
-			json.Unmarshal(d, &cp)
+		if d := strings.TrimSpace(e.Description); d != "" {
+			it.Summary = &d
 		}
-		if cp = strings.TrimSpace(cp); cp != "" {
-			it.Summary = &cp
-		}
+	}
+	if it.Category == nil && e.Category != "" {
+		c := manifest.Slug(slug(category(e.Category)))
+		it.Category = &c
 	}
 	if it.Why == nil && strings.TrimSpace(e.Why) != "" {
 		w := strings.TrimSpace(e.Why)
@@ -667,6 +672,38 @@ func (im *Importer) mergeCollection(m *manifest.Manifest, e Entry, order map[str
 		if !slices.ContainsFunc(it.Placements, func(x manifest.Placement) bool { return x.Surface == pl.Surface }) {
 			it.Placements = append(it.Placements, pl)
 		}
+	}
+	// The art page's words for the hall (artOverride) are also its placard
+	// in the art room, as the 3D site's sync showed them.
+	str := func(field string) *string {
+		var v string
+		if raw, ok := e.Overrides["art"][field]; ok && json.Unmarshal(raw, &v) == nil && strings.TrimSpace(v) != "" {
+			v = strings.TrimSpace(v)
+			return &v
+		}
+		return nil
+	}
+	title, summary := str("title"), str("description")
+	for _, s := range []string{"art-portfolio", "holodeck-art-room"} {
+		if !slices.ContainsFunc(m.Surfaces, func(x manifest.Surface) bool { return string(x.ID) == s }) {
+			continue // copy can only name declared surfaces
+		}
+		if it.Copy == nil {
+			it.Copy = manifest.ItemCopy{}
+		}
+		cf := it.Copy[s]
+		if cf.Title == nil {
+			cf.Title = title
+		}
+		if cf.Summary == nil {
+			cf.Summary = summary
+		}
+		if cf != (manifest.CopyFields{}) {
+			it.Copy[s] = cf
+		}
+	}
+	if len(it.Copy) == 0 {
+		it.Copy = nil
 	}
 	r.Status, r.Note = Merged, "merged into the "+target+" collection"
 }
@@ -724,8 +761,10 @@ func (im *Importer) taxonomy(m *manifest.Manifest, src *Source) {
 		if ic, ok := src.Icons[l]; ok {
 			return ic
 		}
-		for from, to := range categoryMerges {
-			if to == l {
+		// A merged category takes the icon of the first category merged
+		// into it, in content.ts's order (Social: Social Tools' 👥).
+		for _, from := range src.Taxonomy["CATEGORIES"] {
+			if categoryMerges[from] == l {
 				if ic, ok := src.Icons[from]; ok {
 					return ic
 				}
