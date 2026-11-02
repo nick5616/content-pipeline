@@ -152,6 +152,52 @@ describe("Plan review", () => {
   });
 });
 
+describe("Plan diffs", () => {
+  it("expands a view's diff against the bucket", async () => {
+    const withView: Plan = {
+      ...plan,
+      ops: [...plan.ops, { type: "write-view", path: "views/nickel-desktop.json", bucket: "public", item: null, detail: "nickel-desktop", bytes: 300 }],
+    };
+    const api = fakeApi({
+      "POST /api/plans": () => api.json(withView, 201),
+      "GET /api/plans/:id/diff": (_c, u) =>
+        u.searchParams.get("path") === "views/nickel-desktop.json"
+          ? api.json({
+              path: "views/nickel-desktop.json",
+              bucket: "public",
+              exists: true,
+              added: 1,
+              removed: 1,
+              rough: false,
+              hunks: [
+                {
+                  oldStart: 10,
+                  oldLines: 3,
+                  newStart: 10,
+                  newLines: 3,
+                  lines: [
+                    { op: " ", text: '  "slug": "boards",' },
+                    { op: "-", text: '  "title": "Boards",' },
+                    { op: "+", text: '  "title": "Story Boards",' },
+                  ],
+                },
+              ],
+            })
+          : api.json({ title: "Nothing to diff" }, 404),
+    });
+    start("#/plan", api);
+    await userEvent.click(await screen.findByText("Make plan"));
+    await userEvent.click(await screen.findByText("Show diff"));
+    await screen.findByText(/"title": "Story Boards"/);
+    expect(screen.getByText("+1")).toBeTruthy();
+    expect(screen.getByText(/"title": "Boards"/).closest("tr")!.className).toBe("remove");
+    // Line numbers: the removed line is old 11, the added one new 11.
+    expect(screen.getByText(/@@ −10,3 \+10,3 @@/)).toBeTruthy();
+    await userEvent.click(screen.getByText("Hide diff"));
+    expect(screen.queryByText(/"title": "Story Boards"/)).toBeNull();
+  });
+});
+
 describe("Ingest", () => {
   it("uploads dropped files and follows each one", async () => {
     const batch = { id: "B1", files: [{ name: "a.png", size: 3, detectedType: null, stage: "queued", blob: null, item: null, error: null, note: null }] };

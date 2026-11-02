@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOnEvents, useStore } from "../lib/store";
 import { thumbnailUrl, useAuthedImage } from "../lib/images";
 import { href } from "../lib/route";
-import { imageBlobs, type ApplyStatus, type Item, type Op, type Plan, type Problem } from "../lib/types";
+import { imageBlobs, type ApplyStatus, type FileDiff, type Item, type Op, type Plan, type Problem } from "../lib/types";
 
 // How each op reads in the review, in execution order.
 const GROUPS: { types: Op["type"][]; title: string; tone: string }[] = [
@@ -102,15 +102,7 @@ export function PlanReview() {
               {status && <ApplyProgress status={status} />}
             </div>
           )}
-          {plan.problems.length > 0 && (
-            <ul className="problems">
-              {plan.problems.map((p, i) => (
-                <li key={i} className={p.severity}>
-                  {p.message}
-                </li>
-              ))}
-            </ul>
-          )}
+          <Problems problems={plan.problems} />
           {GROUPS.map((g) => {
             const ops = plan.ops.filter((o) => g.types.includes(o.type));
             if (!ops.length) return null;
@@ -121,7 +113,7 @@ export function PlanReview() {
                 </summary>
                 <ul className="ops">
                   {ops.map((o, i) => (
-                    <OpRow key={o.path + i} op={o} item={o.item ? byId.get(o.item) : undefined} />
+                    <OpRow key={o.path + i} op={o} planId={plan.id} item={o.item ? byId.get(o.item) : undefined} />
                   ))}
                 </ul>
               </details>
@@ -130,6 +122,35 @@ export function PlanReview() {
         </>
       )}
     </section>
+  );
+}
+
+/** Errors always show; more than a few warnings fold into one line. */
+function Problems({ problems }: { problems: Plan["problems"] }) {
+  if (problems.length === 0) return null;
+  const errors = problems.filter((p) => p.severity === "error");
+  const warnings = problems.filter((p) => p.severity !== "error");
+  const list = (ps: Plan["problems"]) => (
+    <ul className="problems">
+      {ps.map((p, i) => (
+        <li key={i} className={p.severity}>
+          {p.message}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <>
+      {errors.length > 0 && list(errors)}
+      {warnings.length > 5 ? (
+        <details className="warnings">
+          <summary>{warnings.length} warnings</summary>
+          {list(warnings)}
+        </details>
+      ) : (
+        warnings.length > 0 && list(warnings)
+      )}
+    </>
   );
 }
 
@@ -154,21 +175,104 @@ function Summary({ plan }: { plan: Plan }) {
   );
 }
 
-function OpRow({ op, item }: { op: Op; item?: Item }) {
+// Ops that write a JSON document: their change can be shown as a diff.
+const DIFFABLE: Op["type"][] = ["write-manifest", "write-view", "write-public-manifest"];
+
+function OpRow({ op, planId, item }: { op: Op; planId: string; item?: Item }) {
   const { token } = useStore();
+  const [open, setOpen] = useState(false);
   const blob = /blobs\/sha256\/..\/..\/([0-9a-f]{64})\./.exec(op.path)?.[1] ?? (item ? imageBlobs(item)[0] : undefined);
   const src = useAuthedImage(blob ? thumbnailUrl(blob, 96) : null, token);
+  const diffable = DIFFABLE.includes(op.type);
   return (
-    <li className="op">
-      <span className="op-thumb">{src && <img src={src} alt="" />}</span>
-      <span className="op-type">{op.type}</span>
-      <code className="op-path">{short(op.path)}</code>
-      <span className="op-detail">
-        {item ? <a href={href({ screen: "item", id: item.id })}>{item.title}</a> : op.detail}
-        {op.bytes != null && <span className="muted"> · {bytes(op.bytes)}</span>}
-      </span>
+    <li className="op-wrap">
+      <div className="op">
+        <span className="op-thumb">{src && <img src={src} alt="" />}</span>
+        <span className="op-type">{op.type}</span>
+        <code className="op-path">{short(op.path)}</code>
+        <span className="op-detail">
+          {item ? <a href={href({ screen: "item", id: item.id })}>{item.title}</a> : op.detail}
+          {op.bytes != null && <span className="muted"> · {bytes(op.bytes)}</span>}
+          {diffable && (
+            <button type="button" className="link diff-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+              {open ? "Hide diff" : "Show diff"}
+            </button>
+          )}
+        </span>
+      </div>
+      {open && <DiffView planId={planId} path={op.path} />}
     </li>
   );
+}
+
+/** The JSON in the bucket now against what this plan writes. */
+function DiffView({ planId, path }: { planId: string; path: string }) {
+  const { api } = useStore();
+  const [diff, setDiff] = useState<FileDiff | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    api.GET("/api/plans/{id}/diff", { params: { path: { id: planId }, query: { path } } }).then(({ data, error: err }) => {
+      if (!live) return;
+      if (data) setDiff(data);
+      else setError((err as Problem | undefined)?.detail ?? "Couldn't load the diff");
+    });
+    return () => {
+      live = false;
+    };
+  }, [api, planId, path]);
+  if (error) return <p className="diff error">{error}</p>;
+  if (!diff) return <p className="diff muted">Loading diff…</p>;
+  return (
+    <div className="diff">
+      <p className="diff-head">
+        <span className="add">+{diff.added}</span> <span className="remove">−{diff.removed}</span>
+        <span className="muted">
+          {" "}
+          {diff.exists ? `against the ${diff.bucket} bucket now` : `new in the ${diff.bucket} bucket`}
+          {diff.rough && " · too different to align line by line"}
+        </span>
+      </p>
+      {diff.hunks.length === 0 ? (
+        <p className="muted">No line changes.</p>
+      ) : (
+        <div className="diff-body">
+          {diff.hunks.map((h, i) => (
+            <table key={i} className="hunk">
+              <tbody>
+                <tr className="hunk-head">
+                  <td colSpan={3}>
+                    @@ −{h.oldStart},{h.oldLines} +{h.newStart},{h.newLines} @@
+                  </td>
+                </tr>
+                {numbered(h).map((l, j) => (
+                  <tr key={j} className={l.op === "+" ? "add" : l.op === "-" ? "remove" : ""}>
+                    <td className="ln">{l.old ?? ""}</td>
+                    <td className="ln">{l.new ?? ""}</td>
+                    <td className="code">
+                      {l.op}
+                      {l.text}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A hunk's lines with their old and new line numbers. */
+function numbered(h: FileDiff["hunks"][number]) {
+  let o = h.oldStart;
+  let n = h.newStart;
+  return h.lines.map((l) => ({
+    ...l,
+    old: l.op === "+" ? undefined : o++,
+    new: l.op === "-" ? undefined : n++,
+  }));
 }
 
 function ApplyProgress({ status }: { status: ApplyStatus }) {

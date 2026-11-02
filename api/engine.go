@@ -126,6 +126,7 @@ func (a *engineAPI) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/doctor", h(a.getDoctor))
 	mux.HandleFunc("POST /api/plans", h(a.createPlan))
 	mux.HandleFunc("GET /api/plans/{id}", h(a.getPlan))
+	mux.HandleFunc("GET /api/plans/{id}/diff", h(a.planDiff))
 	mux.HandleFunc("POST /api/plans/{id}/apply", h(a.applyPlan))
 	mux.HandleFunc("GET /api/plans/{id}/apply", h(a.applyStatus))
 }

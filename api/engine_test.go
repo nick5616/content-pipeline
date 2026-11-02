@@ -15,6 +15,7 @@ import (
 
 	"github.com/nick5616/canon/engine/config"
 	"github.com/nick5616/canon/engine/gcs"
+	"github.com/nick5616/canon/engine/manifest"
 	"github.com/nick5616/canon/engine/store"
 	"github.com/nick5616/canon/internal/testenv"
 )
@@ -235,4 +236,47 @@ func TestEngineRoutesWithoutEngine(t *testing.T) {
 			t.Errorf("%s: %d", path, w.Code)
 		}
 	}
+}
+
+// A plan's manifest and view writes can be diffed against the buckets.
+func TestPlanDiffAPI(t *testing.T) {
+	x := newEngineHarness(t, "png.png")
+	x.env.WithPublic()
+	x.e.Derived, x.e.Jobs = x.env.Derived, x.env.Jobs
+	x.e.Config.PublicBucket = testenv.Public
+	x.env.Converge()
+	// Rename the item, then plan: the private manifest changes one line.
+	if _, err := x.env.Working.Update(func(m *manifest.Manifest) error { m.Items[0].Title = "Renamed"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	var p struct {
+		ID  string
+		Ops []struct{ Type, Path string }
+	}
+	x.call("POST", "/api/plans", "", nil, 201, &p)
+	var d struct {
+		Exists         bool
+		Added, Removed int
+		Hunks          []struct {
+			Lines []struct{ Op, Text string }
+		}
+	}
+	x.call("GET", "/api/plans/"+p.ID+"/diff?path=manifest/manifest.json", "", nil, 200, &d)
+	if !d.Exists || d.Added != 1 || d.Removed != 1 || len(d.Hunks) != 1 {
+		t.Fatalf("manifest diff: %+v", d)
+	}
+	found := false
+	for _, l := range d.Hunks[0].Lines {
+		found = found || (l.Op == "+" && strings.Contains(l.Text, `"title": "Renamed"`))
+	}
+	if !found {
+		t.Errorf("no added title line: %+v", d.Hunks[0].Lines)
+	}
+	// A path the plan doesn't write a manifest or view to.
+	x.call("GET", "/api/plans/"+p.ID+"/diff?path=blobs/x", "", nil, 404, nil)
+	// Editing again makes the plan stale.
+	if _, err := x.env.Working.Update(func(m *manifest.Manifest) error { m.Items[0].Title = "Again"; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	x.call("GET", "/api/plans/"+p.ID+"/diff?path=manifest/manifest.json", "", nil, 409, nil)
 }

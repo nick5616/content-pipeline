@@ -70,6 +70,7 @@ rewrite old ones. Full context: [plans/M0-M1.md](plans/M0-M1.md).
 | D63 | 2026-10-31 | M6 K1: the UI's surface preview is a faithful sketch per surface (its real structure, from `canon view <surface>`), plus a list of what changes against the live view. The real sites aren't embedded. |
 | D64 | 2026-10-31 | M6 K2: the UI is hand-written CSS with design tokens and light and dark themes; no UI framework or component library. |
 | D65 | 2026-10-31 | Local API 1.5.0 (additive): `getLocalBlob` and `getLocalDerived` answer with the file's real media type (image/*, audio/*, video/*, application/*) instead of only octet-stream, so the UI can display them; `getDoctor` may answer 503 when the server wasn't started by `canon serve`; and `GET /api/local/thumbnails/{sha256}?w=` (`getLocalThumbnail`) serves an image blob's nearest thumb size, so the library grid never loads full-size originals; and `GET /api/surfaces/{id}/changes` (`getSurfaceChanges`) compares the preview with the live view server-side (the public bucket's CORS doesn't, and shouldn't, allow canon serve's origin). |
+| D66 | 2026-11-01 | Local API 1.6.0 (additive): `GET /api/plans/{id}/diff?path=` (`getPlanDiff`, CLI `canon plan diff <id> [path]`): a line diff of a plan's manifest or view write against the object in the bucket now (Myers, after trimming common prefix and suffix; canonical JSON makes it read well). The UI's plan view expands it per op. |
 
 ## M1 schema calls (approved 2026-10-28)
 

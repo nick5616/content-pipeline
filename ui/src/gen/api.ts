@@ -303,6 +303,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plans/{id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What one of the plan's manifest or view writes changes
+         * @description A line diff of the JSON in the bucket now against the bytes the plan
+         *     writes, for write-manifest, write-view and write-public-manifest ops.
+         */
+        get: operations["getPlanDiff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plans/{id}/apply": {
         parameters: {
             query?: never;
@@ -515,6 +536,28 @@ export interface components {
             viewVersion: number | null;
             /** @description Visible placements on this surface. */
             placements: number;
+        };
+        FileDiff: {
+            path: string;
+            /** @enum {string} */
+            bucket: "private" | "public";
+            /** @description Whether the object is in the bucket now; false means every line is added. */
+            exists: boolean;
+            added: number;
+            removed: number;
+            /** @description The texts differed too much to align; the changed middle is shown as removed then added. */
+            rough: boolean;
+            hunks: {
+                oldStart: number;
+                oldLines: number;
+                newStart: number;
+                newLines: number;
+                lines: {
+                    /** @enum {string} */
+                    op: " " | "-" | "+";
+                    text: string;
+                }[];
+            }[];
         };
         SurfaceChanges: {
             surface: string;
@@ -1811,6 +1854,35 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    getPlanDiff: {
+        parameters: {
+            query: {
+                /** @description The op's path, e.g. views/nickel-desktop.json. */
+                path: string;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["PlanID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The diff. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileDiff"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            503: components["responses"]["Offline"];
         };
     };
     getApplyStatus: {

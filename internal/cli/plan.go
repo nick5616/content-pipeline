@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/nick5616/canon/api"
 	"github.com/nick5616/canon/engine/apply"
 	"github.com/nick5616/canon/engine/jobs"
 	"github.com/nick5616/canon/engine/plan"
@@ -96,7 +97,62 @@ then warns about jobs it can't upload yet.`,
 			return plan.Render(cmd.OutOrStdout(), p)
 		},
 	})
+	cmd.AddCommand(newPlanDiff())
 	return cmd
+}
+
+func newPlanDiff() *cobra.Command {
+	return &cobra.Command{
+		Use:   "diff <id|file> [path]",
+		Short: "Show what a plan's manifest and view writes change, as unified diffs",
+		Long: `Compares each manifest or view the plan writes (or only path, such as
+views/nickel-desktop.json) with what's in the bucket now. Nothing is
+written.`,
+		Args: cobra.RangeArgs(1, 2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			e, err := engineFor(cmd)
+			if err != nil {
+				return err
+			}
+			p, err := plan.Open(e.StateDir, args[0])
+			if err != nil {
+				return err
+			}
+			var paths []string
+			if len(args) == 2 {
+				paths = []string{args[1]}
+			} else {
+				for _, o := range api.DiffablePaths(p) {
+					paths = append(paths, o.Path)
+				}
+			}
+			w := cmd.OutOrStdout()
+			if len(paths) == 0 {
+				fmt.Fprintln(w, "This plan writes no manifest or view.")
+			}
+			for _, path := range paths {
+				d, err := e.PlanDiff(cmd.Context(), p, path)
+				if err != nil {
+					return err
+				}
+				before := "a/" + path
+				if !d.Exists {
+					before = "/dev/null"
+				}
+				fmt.Fprintf(w, "--- %s (%s bucket now)\n+++ b/%s (this plan)\n", before, d.Bucket, path)
+				for _, h := range d.Hunks {
+					fmt.Fprintf(w, "@@ -%d,%d +%d,%d @@\n", h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+					for _, l := range h.Lines {
+						fmt.Fprintf(w, "%s%s\n", l.Op, l.Text)
+					}
+				}
+				if len(d.Hunks) == 0 {
+					fmt.Fprintln(w, "(no changes)")
+				}
+			}
+			return nil
+		},
+	}
 }
 
 func newApply() *cobra.Command {

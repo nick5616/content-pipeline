@@ -54,6 +54,11 @@ await step("make a plan", async () => {
   await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent === "Make plan").click());
   await text("Apply ", 60000);
 });
+await step("expand the manifest's diff", async () => {
+  await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent === "Show diff").click());
+  await text("Edited in the browser", 15000);
+  await page.waitForSelector(".hunk tr.add", { timeout: 15000 });
+});
 await step("apply it", async () => {
   await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent.startsWith("Apply ")).click());
   await text("Applied.", 60000);

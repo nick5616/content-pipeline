@@ -18,6 +18,7 @@ export type Job = S["Job"];
 export type JobRun = S["JobRun"];
 export type DoctorReport = S["DoctorReport"];
 export type SurfaceChanges = S["SurfaceChanges"];
+export type FileDiff = S["FileDiff"];
 export type Problem = S["Problem"];
 export type ValidationProblem = S["ValidationProblem"];
 export type CanonEvent = { type: "ingest" | "job" | "apply" | "sync"; id: string; data: unknown };

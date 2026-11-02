@@ -132,6 +132,8 @@ legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
 .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; }
 textarea.private { border-style: dashed; }
 .problems { margin: 8px 0; padding-left: 20px; }
+details.warnings { margin: 8px 0; }
+details.warnings summary { cursor: pointer; color: var(--warn); }
 .problems .error { color: var(--error); }
 .problems .warning { color: var(--warn); }
 .asset { display: flex; gap: 12px; margin-bottom: 12px; }
@@ -163,6 +165,21 @@ textarea.private { border-style: dashed; }
 .tone-remove summary { color: var(--remove); }
 .tone-muted summary { color: var(--muted); }
 .ops { list-style: none; margin: 0; padding: 0 12px 8px; }
+.op-wrap { list-style: none; border-top: 1px solid var(--line); }
+.op-wrap .op { border-top: 0; }
+.diff-toggle { margin-left: 8px; font-size: 12px; }
+.diff { margin: 4px 0 10px 50px; }
+.diff-head { margin: 4px 0; font-size: 12px; }
+.diff-head .add, .diff .add .code { color: var(--add); }
+.diff-head .remove, .diff .remove .code { color: var(--remove); }
+.diff-body { max-height: 480px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.hunk { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 12px; }
+.hunk td { padding: 0 8px; white-space: pre; vertical-align: top; }
+.hunk td.code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.hunk .ln { color: var(--muted); text-align: right; user-select: none; width: 1%; }
+.hunk tr.add { background: color-mix(in srgb, var(--add) 12%, transparent); }
+.hunk tr.remove { background: color-mix(in srgb, var(--remove) 12%, transparent); }
+.hunk-head td { color: var(--muted); background: var(--hover); padding: 2px 8px; }
 .op { display: grid; grid-template-columns: 40px 140px minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; align-items: center; padding: 3px 0; border-top: 1px solid var(--line); }
 .op-thumb { width: 40px; height: 30px; background: var(--hover); border-radius: 3px; overflow: hidden; }
 .op-thumb img { width: 100%; height: 100%; object-fit: cover; }

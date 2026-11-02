@@ -2,7 +2,7 @@ openapi: 3.1.0
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: Canon local API
-  version: 1.5.0
+  version: 1.6.0
   description: |
     The API behind `canon serve`, on 127.0.0.1 only. Every request needs
     `Authorization: Bearer <token>`, where the token is the one `canon serve`
@@ -14,7 +14,7 @@ info:
     moved.
 
     Frozen at the end of M1; changes since are additive only (1.1.0: D33,
-    1.2.0: D39, 1.3.0: D50, 1.4.0: D58, 1.5.0: D65). Handlers land in M3 to M6; `GET /api/health` exists from M0.
+    1.2.0: D39, 1.3.0: D50, 1.4.0: D58, 1.5.0: D65, 1.6.0: D66). Handlers land in M3 to M6; `GET /api/health` exists from M0.
 
     Every operation has a CLI twin (`x-cli`), so nothing is UI-only:
 
@@ -31,6 +31,7 @@ info:
     | putSurface | `canon surface set` |
     | startIngest, getIngest | `canon ingest <paths>` |
     | createPlan, getPlan, applyPlan, getApplyStatus | `canon plan -o`, `canon plan show`, `canon apply` |
+    | getPlanDiff | `canon plan diff` |
     | listJobs, retryJob | `canon jobs`, `canon jobs retry` |
     | runJobs, getJobRun | `canon jobs run` |
     | getEvents | `--watch` flags (`canon jobs --watch`) |
@@ -427,6 +428,28 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /api/plans/{id}/diff:
+    get:
+      operationId: getPlanDiff
+      x-cli: canon plan diff
+      summary: What one of the plan's manifest or view writes changes
+      description: |
+        A line diff of the JSON in the bucket now against the bytes the plan
+        writes, for write-manifest, write-view and write-public-manifest ops.
+      parameters:
+        - $ref: "#/components/parameters/PlanID"
+        - { name: path, in: query, required: true, description: "The op's path, e.g. views/nickel-desktop.json.", schema: { type: string } }
+      responses:
+        "200":
+          description: The diff.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FileDiff" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "503": { $ref: "#/components/responses/Offline" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /api/plans/{id}/apply:
     post:
       operationId: applyPlan
@@ -769,6 +792,38 @@ components:
         viewVersion: { type: [integer, "null"] }
         placements: { type: integer, minimum: 0, description: Visible placements on this surface. }
       required: [id, label, baseUrl, registered, viewVersion, placements]
+      additionalProperties: false
+
+    FileDiff:
+      type: object
+      properties:
+        path: { type: string }
+        bucket: { type: string, enum: [private, public] }
+        exists: { type: boolean, description: "Whether the object is in the bucket now; false means every line is added." }
+        added: { type: integer, minimum: 0 }
+        removed: { type: integer, minimum: 0 }
+        rough: { type: boolean, description: "The texts differed too much to align; the changed middle is shown as removed then added." }
+        hunks:
+          type: array
+          items:
+            type: object
+            properties:
+              oldStart: { type: integer, minimum: 0 }
+              oldLines: { type: integer, minimum: 0 }
+              newStart: { type: integer, minimum: 0 }
+              newLines: { type: integer, minimum: 0 }
+              lines:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    op: { type: string, enum: [" ", "-", "+"] }
+                    text: { type: string }
+                  required: [op, text]
+                  additionalProperties: false
+            required: [oldStart, oldLines, newStart, newLines, lines]
+            additionalProperties: false
+      required: [path, bucket, exists, added, removed, rough, hunks]
       additionalProperties: false
 
     SurfaceChanges:
