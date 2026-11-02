@@ -53,7 +53,7 @@ export function fakeApi(overrides: Record<string, Handler> = {}) {
   const enc = new TextEncoder();
 
   const routes: Record<string, Handler> = {
-    "GET /api/items": () => json({ revision: state.revision, items: state.items }, 200, { ETag: `"${state.revision}"` }),
+    "GET /api/items": () => json({ revision: `"${state.revision}"`, items: state.items }, 200, { ETag: `"${state.revision}"` }),
     "GET /api/items/:id": (_c, u) => {
       const id = decodeURIComponent(u.pathname.split("/").pop()!);
       const it = state.items.find((i) => i.id === id || i.slug === id);
@@ -71,7 +71,7 @@ export function fakeApi(overrides: Record<string, Handler> = {}) {
     },
     "GET /api/taxonomy": () => json(taxonomy),
     "GET /api/surfaces": () => json(surfaces),
-    "GET /api/sync/status": () => json({ state: "in-sync", baseGeneration: 1, remoteGeneration: 1, localEdits: false, revision: state.revision }),
+    "GET /api/sync/status": () => json({ state: "in-sync", baseGeneration: 1, remoteGeneration: 1, localEdits: false, revision: `"${state.revision}"` }),
     "GET /api/local/thumbnails/:sha": () => new Response(new Blob(["x"], { type: "image/webp" })),
     "GET /api/local/derived/:k/:f": () => new Response(new Blob(["x"], { type: "image/webp" })),
     "GET /api/jobs": () => json([]),

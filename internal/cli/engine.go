@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -49,11 +48,9 @@ func newEngine(cfg config.Config) (*api.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
-	var (
-		once   sync.Once
-		client gcs.API
-		cerr   error
-	)
+	// Made on first use, and remade after an unreachable error (see
+	// reconnecting): canon serve runs for days.
+	client := &reconnecting{make: func(ctx context.Context) (gcs.API, error) { return newGCS(ctx, cfg) }}
 	return &api.Engine{
 		Derived:  der,
 		Jobs:     db,
@@ -63,10 +60,7 @@ func newEngine(cfg config.Config) (*api.Engine, error) {
 		Blobs:    blobs,
 		StateDir: cfg.StateDir,
 		Now:      time.Now,
-		GCS: func(ctx context.Context) (gcs.API, error) {
-			once.Do(func() { client, cerr = newGCS(ctx, cfg) })
-			return client, cerr
-		},
+		GCS:      func(ctx context.Context) (gcs.API, error) { return client, nil },
 	}, nil
 }
 

@@ -33,6 +33,9 @@ export type PatchResult =
 
 const Ctx = createContext<Store | null>(null);
 
+/** Revisions travel as entity tags ("abc..."); compare and send them bare. */
+const bare = (rev: string) => rev.replace(/"/g, "");
+
 export function useStore(): Store {
   const s = useContext(Ctx);
   if (!s) throw new Error("useStore outside StoreProvider");
@@ -92,8 +95,8 @@ export function StoreProvider({
     }
     setError(null);
     setItems(it.data.items);
-    setRevision(it.data.revision);
-    revisionRef.current = it.data.revision;
+    setRevision(bare(it.data.revision));
+    revisionRef.current = bare(it.data.revision);
     if (tx.data) setTaxonomy(tx.data);
     if (sf.data) setSurfaces(sf.data);
     setReady(true);
@@ -130,7 +133,7 @@ export function StoreProvider({
         if (timer) clearTimeout(timer);
         timer = setTimeout(() => {
           const s = e.type === "sync" ? (e.data as SyncStatus) : null;
-          if (!s || s.revision !== revisionRef.current) reload();
+          if (!s || bare(s.revision) !== revisionRef.current) reload();
         }, 200);
       }
     };
@@ -166,7 +169,7 @@ export function StoreProvider({
       if (!res.ok) {
         return { ok: false, message: body.detail ?? body.title ?? String(res.status), problems: body.problems ?? [] };
       }
-      const etag = res.headers.get("ETag")?.replace(/"/g, "");
+      const etag = res.headers.get("ETag") && bare(res.headers.get("ETag")!);
       if (etag) {
         revisionRef.current = etag;
         setRevision(etag);

@@ -45,6 +45,8 @@ type Status struct {
 	RemoteGeneration *int64 `json:"remoteGeneration"` // nil when offline
 	LocalEdits       bool   `json:"localEdits"`
 	Revision         string `json:"revision"` // working revision
+	// Cause is why the remote couldn't be reached, when State is Offline.
+	Cause error `json:"-"`
 }
 
 var (
@@ -155,7 +157,7 @@ func (w *Working) Status(ctx context.Context, r Remote) (Status, error) {
 	case errors.Is(err, gcs.ErrNotExist):
 	case err != nil:
 		if errors.Is(err, gcs.ErrOffline) {
-			st.State = Offline
+			st.State, st.Cause = Offline, err
 			return st, nil
 		}
 		return st, err
@@ -183,6 +185,14 @@ func (w *Working) Status(ctx context.Context, r Remote) (Status, error) {
 	return st, nil
 }
 
+// offline is the error for an Offline status: ErrOffline with its cause.
+func (s Status) offline() error {
+	if s.Cause != nil {
+		return s.Cause
+	}
+	return gcs.ErrOffline
+}
+
 // Pull fetches the remote manifest into base and, unless there are local
 // edits, into working. With local edits it fails with ErrDiverged unless
 // discardLocal is set.
@@ -192,7 +202,7 @@ func (w *Working) Pull(ctx context.Context, r Remote, discardLocal bool) (Status
 		return st, err
 	}
 	if st.State == Offline {
-		return st, gcs.ErrOffline
+		return st, st.offline()
 	}
 	if st.LocalEdits && !discardLocal {
 		if st.State == Edited {
@@ -241,7 +251,7 @@ func (w *Working) Fresh(ctx context.Context, r Remote) (Status, error) {
 	}
 	switch st.State {
 	case Offline:
-		return st, gcs.ErrOffline
+		return st, st.offline()
 	case Diverged:
 		return st, ErrDiverged
 	case Behind:
